@@ -127,7 +127,7 @@ object ConsumerOffsetsFn  extends LazyLogging  {
       val commitTs = Instant.ofEpochMilli(consumerGroupData(2).toLong)
       val now = Instant.now()
 
-      val tenMinutesAgo = now.minusSeconds(180)
+      val tenMinutesAgo = now.minusSeconds(600)
 
       if(commitTs.compareTo(tenMinutesAgo) < 1) false else true
     }
