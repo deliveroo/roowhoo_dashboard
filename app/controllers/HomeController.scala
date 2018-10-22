@@ -11,6 +11,7 @@ import org.apache.kafka.streams.KafkaStreams.State
 import org.apache.kafka.streams.{KafkaStreams, KeyValue}
 import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.{KeyValueIterator, QueryableStoreTypes}
+import util.KafkaUtils
 
 import scala.collection.JavaConverters._
 
@@ -29,13 +30,12 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
    * a path of `/`.
    */
 
+
   private def getContentDetails(
                                  iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]
                                ): Seq[KeyValue[Windowed[String], (ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]] = {
     iterator.map(itr => {
-      val consumerPerTopic: Map[Topic, Set[ConsumerInstanceDetails]] = itr.value.clientDetails.members.flatMap(m =>
-        m.assignedPartitions.map(_._1).map(_ -> m)
-      ).groupBy(_._1).mapValues(v=> v.map(_._2))
+      val consumerPerTopic= KafkaUtils.groupPerTopic(itr.value.clientDetails)
       KeyValue.pair(itr.key, (itr.value.clientDetails, consumerPerTopic))
 
     })
