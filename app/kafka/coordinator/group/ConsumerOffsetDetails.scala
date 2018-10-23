@@ -4,9 +4,9 @@ import kafka.common.OffsetAndMetadata
 import play.api.libs.json.{Json, OFormat}
 
 final case class ConsumerOffsetDetails(
-                                        topic: String,
+                                        topic: ALIAS.Topic,
                                         partition: Int,
-                                        group: String,
+                                        group: ALIAS.GroupId,
                                         version: Int,
                                         offset: Long,
                                         metadata: String,

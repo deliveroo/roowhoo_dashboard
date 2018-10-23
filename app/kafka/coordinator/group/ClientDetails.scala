@@ -12,6 +12,7 @@ object ALIAS {
   type Topic= String
   type PartitionNumber = Int
   type ConsumerInstanceId = String
+  type GroupId = String
 }
 final case class ConsumerInstanceDetails(
                                    id: ALIAS.ConsumerInstanceId,
