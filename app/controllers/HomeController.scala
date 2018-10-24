@@ -3,7 +3,7 @@ package controllers
 import javax.inject._
 import java.time.Instant
 
-import kafka.coordinator.group.ALIAS.Topic
+import kafka.coordinator.group.ALIAS.{Topic}
 import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerInstanceDetails}
 import kafkastreams._
 import play.api.mvc._
@@ -32,17 +32,17 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
 
 
   private def getContentDetails(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]
-                               ): Map[String, Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]] = {
+                               ): Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])] = {
     iterator.map(itr => {
       val consumerPerTopic= KafkaUtils.groupPerTopic(itr.value.clientDetails)
       val window = itr.key
       val clientDetails = itr.value.clientDetails
       (window, clientDetails, consumerPerTopic)
-    }).groupBy({case(_,clientDetails,_) => clientDetails.group}).mapValues(s =>
-      s.sortWith({case(a,b) =>
-        a._1.window().start > b._1.window().start
-      }).headOption.toSeq
-    ).filterKeys(g => !g.startsWith("_"))
+    }).groupBy({case(_,clientDetails,_) => clientDetails.group})
+      .filterKeys(g => !g.startsWith("_"))
+      .map(_._2).toSeq.flatten.sortWith({ case (a, b) =>
+      a._1.window().start < b._1.window().start
+    })
   }
 
   private def getWindowsBetween(streams: KafkaStreams, from: Long, to: Long) = {
@@ -62,7 +62,7 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
         )
 
       val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
-      Ok(views.html.index(getContentDetails(iterator)))
+      Ok(views.html.index(getContentDetails(KafkaUtils.getLatestStores(iterator))))
     } else {
       Ok(views.html.loading())
     }
@@ -85,7 +85,7 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
         getWindowsBetween(kafka.stream, fiveMinsAgo.toEpochMilli, now.toEpochMilli).asScala.toList
       Ok(views.html.between(getContentDetails(iterator), fiveMinsAgo.toEpochMilli, now.toEpochMilli))
 
-    } else       Ok(views.html.loading())
+    } else Ok(views.html.loading())
 
 
   }
@@ -104,7 +104,7 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
         getWindowsBetween(kafka.stream, from, to).asScala.toList
       Ok(views.html.between(getContentDetails(iterator), from, to))
 
-    } else       Ok(views.html.loading())
+    } else Ok(views.html.loading())
 
   }
 
