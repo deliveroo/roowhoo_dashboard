@@ -3,7 +3,7 @@
 @import org.apache.kafka.streams.kstream.Windowed
 @import util.Frontend
 @(details: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])])
-@defining(Seq[String]("rdkafka", "ruby-kafka", "consumer-1")) { riskClientIDS =>
+@defining(Seq[String]("rdkafka", "ruby-kafka", "consumer-1", "nonode@nohost")) { riskClientIDS =>
 
 <div class="table-responsive">
   <table class="table table-bordered">
@@ -34,7 +34,7 @@
     </tr>
 
       @for(consumingDetails <- d._3.tail) {
-        @if(riskClientIDS.contains(d._2.clientId)){
+        @if(riskClientIDS.contains(d._2.clientId) || riskClientIDS.exists(d._2.clientId.startsWith(_))  ){
           <tr class="text-light risk">
           } else if (d._2.group.startsWith("_") || d._2.clientId.startsWith("perf") || d._2.clientId.startsWith("console")){
         <tr class="text-muted">
