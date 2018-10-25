@@ -7,10 +7,11 @@ import kafka.security.auth.SimpleAclAuthorizer
 import scala.collection.JavaConverters._
 import java.net.InetAddress
 
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.kstream.Windowed
 
-object KafkaUtils {
+object KafkaUtils extends LazyLogging {
   type UserName = String
 
   def getLatestStores(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]):
@@ -33,6 +34,9 @@ object KafkaUtils {
 
   def authorizer(zookeeperConfig: ZookeeperConfig): SimpleAclAuthorizer = {
     val zkHost = InetAddress.getByName(zookeeperConfig.host).getHostAddress
+    logger.info("***********")
+    logger.info(zookeeperConfig.host)
+    logger.info(zkHost)
     new SimpleAclAuthorizer() {
       configure(Map("zookeeper.connect" -> s"$zkHost:${zookeeperConfig.port}").asJava)
     }

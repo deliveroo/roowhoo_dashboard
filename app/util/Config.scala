@@ -1,7 +1,5 @@
 package util
 
-import java.net.InetAddress
-
 import play.api.Configuration
 
 case class Config(password: String, userName: String, bootstrapServer: String, appVersion: String)
@@ -22,10 +20,7 @@ object ZookeeperConfig {
   def apply(playConfig: Configuration): ZookeeperConfig = {
     ZookeeperConfig(
       port = playConfig.get[Int]("zookeeperPort"),
-      host = playConfig.get[String]("zookeeperHost") match {
-        case "zookeeper" => InetAddress.getByName("zookeeper").getHostAddress
-        case localhost => localhost
-      }
+      host = playConfig.get[String]("zookeeperHost")
     )
   }
 }
