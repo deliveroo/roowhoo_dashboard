@@ -11,7 +11,7 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
 import kafka.coordinator.serializer.{ClientDetailsSerde, CustomSerdes}
-import org.apache.kafka.common.config.SaslConfigs
+import org.apache.kafka.common.config.{SaslConfigs, TopicConfig}
 import org.apache.kafka.common.config.SaslConfigs.SASL_JAAS_CONFIG
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes
@@ -37,6 +37,10 @@ object ConsumerGroupsProcessor extends LazyLogging  {
     props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, new ClientDetailsSerde().getClass)
     props.put("exclude.internal.topics", "false") // necessary to consume __consumer_offsets
     props.put(StreamsConfig.CLIENT_ID_CONFIG, APP_NAME)
+    val STORE_CHANGE_LOG_ADDITIONAL_RETENTION = 5 * 24 * 60 * 60 * 1000
+    props.put(StreamsConfig.WINDOW_STORE_CHANGE_LOG_ADDITIONAL_RETENTION_MS_CONFIG, STORE_CHANGE_LOG_ADDITIONAL_RETENTION.toString)
+    props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.RETENTION_BYTES_CONFIG, "3600000")
+    props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE)
     props.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
     props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
     props.put(SASL_JAAS_CONFIG, "org.apache.kafka.common.security.scram.ScramLoginModule required " +
