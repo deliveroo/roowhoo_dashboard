@@ -16,20 +16,8 @@ import util.KafkaUtils
 
 import scala.collection.JavaConverters._
 
-/**
- * This controller creates an `Action` to handle HTTP requests to the
- * application's home page.
- */
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) with LazyLogging {
-
-  /**
-   * Create an Action to render an HTML page.
-   *
-   * The configuration in the `routes` file means that this method
-   * will be called when the application receives a `GET` request with
-   * a path of `/`.
-   */
 
 
   private def getContentDetails(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]
@@ -53,60 +41,59 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
     val iterator: KeyValueIterator[Windowed[String], ActiveGroup] = offsetsMetaWindowStore.fetchAll(from, to)
     iterator
   }
-  def index() = Action { implicit request: Request[AnyContent] =>
-    if(kafka.stream.state() == State.RUNNING) {
-      kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
-      val offsetsMetaWindowStore =
-        kafka.stream.store(
-          ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
-          QueryableStoreTypes.windowStore[String, ActiveGroup]()
-        )
 
-      val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
-      Ok(views.html.index(getContentDetails(KafkaUtils.getLatestStores(iterator))))
-    } else {
-      Ok(views.html.loading())
+  def index() = Action { implicit request: Request[AnyContent] =>
+    kafka.stream.state() match {
+      case State.RUNNING =>
+        kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
+        val offsetsMetaWindowStore =
+          kafka.stream.store(
+            ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
+            QueryableStoreTypes.windowStore[String, ActiveGroup]()
+          )
+
+        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
+        Ok(views.html.index(getContentDetails(KafkaUtils.getLatestStores(iterator))))
+
+      case State.ERROR => InternalServerError("ERROR")
+      case _ =>
+        Ok(views.html.loading())
+
+    }
+  }
+
+  def lastFiveMinutes() = Action { implicit request: Request[AnyContent] =>
+    kafka.stream.state() match {
+      case State.RUNNING =>
+        val now = Instant.now()
+        val fiveMinsAgo = now.minusSeconds(300L)
+
+        kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
+        kafka.stream.store(
+            ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
+            QueryableStoreTypes.windowStore[String, ActiveGroup]()
+          )
+
+        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] =
+          getWindowsBetween(kafka.stream, fiveMinsAgo.toEpochMilli, now.toEpochMilli).asScala.toList
+        Ok(views.html.between(getContentDetails(iterator), fiveMinsAgo.toEpochMilli, now.toEpochMilli))
+
+      case State.ERROR => InternalServerError("ERROR")
+      case _ => Ok(views.html.loading())
     }
 
   }
 
-  def lastFiveMinutes() = Action { implicit request: Request[AnyContent] =>
-    if(kafka.stream.state() == State.RUNNING) {
-      val now = Instant.now()
-      val fiveMinsAgo = now.minusSeconds(300L)
-
-      kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
-      val offsetsMetaWindowStore =
-        kafka.stream.store(
-          ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
-          QueryableStoreTypes.windowStore[String, ActiveGroup]()
-        )
-
-      val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] =
-        getWindowsBetween(kafka.stream, fiveMinsAgo.toEpochMilli, now.toEpochMilli).asScala.toList
-      Ok(views.html.between(getContentDetails(iterator), fiveMinsAgo.toEpochMilli, now.toEpochMilli))
-
-    } else Ok(views.html.loading())
-
-
-  }
-
   def between(from:Long, to: Long) = Action { implicit request: Request[AnyContent] =>
-    if(kafka.stream.state() == State.RUNNING) {
-
-      kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
-      val offsetsMetaWindowStore =
-        kafka.stream.store(
-          ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
-          QueryableStoreTypes.windowStore[String, ActiveGroup]()
-        )
-
-      val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] =
-        getWindowsBetween(kafka.stream, from, to).asScala.toList
-      Ok(views.html.between(getContentDetails(iterator), from, to))
-
-    } else Ok(views.html.loading())
-
+    kafka.stream.state() match {
+      case State.RUNNING =>
+        kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
+        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] =
+          getWindowsBetween(kafka.stream, from, to).asScala.toList
+        Ok(views.html.between(getContentDetails(iterator), from, to))
+      case State.ERROR => InternalServerError("ERROR")
+      case _ => Ok(views.html.loading())
+    }
   }
 }
 

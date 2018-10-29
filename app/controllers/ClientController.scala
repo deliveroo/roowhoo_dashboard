@@ -70,29 +70,28 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
   }
 
   def index(enCodedClientId: String) = Action { implicit request: Request[AnyContent] =>
-    if(kafka.stream.state() == State.RUNNING) {
-      kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
-      val offsetsMetaWindowStore =
-        kafka.stream.store(
-          ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
-          QueryableStoreTypes.windowStore[String, ActiveGroup]()
-        )
+    kafka.stream.state() match {
+      case State.RUNNING =>
+        kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
+        val offsetsMetaWindowStore =
+          kafka.stream.store(
+            ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
+            QueryableStoreTypes.windowStore[String, ActiveGroup]()
+          )
 
 
-      val clientId = URLDecoder.decode(enCodedClientId, "UTF-8")
-      val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
-      val details = getContentDetails(iterator, clientId)
-      val authorizer = KafkaUtils.authorizer(ZookeeperConfig(playConfig))
-      val aclsDetails: Map[(GroupId, Topic), Set[UserName]] = getAcls(authorizer, details)
-      val adminAcls: Set[UserName] = KafkaUtils.currentACLS(authorizer, "*", "*")
+        val clientId = URLDecoder.decode(enCodedClientId, "UTF-8")
+        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
+        val details = getContentDetails(iterator, clientId)
+        val authorizer = KafkaUtils.authorizer(ZookeeperConfig(playConfig))
+        val aclsDetails: Map[(GroupId, Topic), Set[UserName]] = getAcls(authorizer, details)
+        val adminAcls: Set[UserName] = KafkaUtils.currentACLS(authorizer, "*", "*")
 
-      Ok(views.html.client(details, clientId, aclsDetails, adminAcls))
+        Ok(views.html.client(details, clientId, aclsDetails, adminAcls))
 
-    } else {
-      Ok(views.html.loading())
-
+      case State.ERROR => InternalServerError("Error")
+      case _ => Ok(views.html.loading())
     }
-
   }
 }
 
