@@ -10,7 +10,7 @@ object Frontend {
 
   val internalStreamTopic = "KSTREAM"
   def colorRow(clientDetails: ClientDetails): String  = {
-    if(riskClientIds.contains(clientDetails.clientId)) "text-light risk"
+    if(riskClientIds.contains(clientDetails.clientId) || riskClientIds.exists(clientDetails.clientId.startsWith(_))) "text-light risk"
     else {
       if(clientDetails.group.startsWith("_")
         || clientDetails.clientId.startsWith("perf")

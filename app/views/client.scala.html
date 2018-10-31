@@ -3,11 +3,13 @@
 @import util.KafkaUtils.UserName
 @import org.apache.kafka.streams.kstream.Windowed
 @import org.apache.kafka.streams.KeyValue
+@import util.Frontend
+
 @(details: Map[GroupId , Map[Topic, Set[ConsumerInstanceDetails]]], clientId: String, aclsDetails: Map[(GroupId, Topic), Set[UserName]], adminAcls: Set[UserName])
 
 @main("Kafka Active Consumers") {
 
-@defining(Seq[String]("rdkafka", "ruby-kafka", "consumer-1")) { riskClientIDS =>
+@defining(Frontend.riskClientIds) { riskClientIDS =>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
   <h1 class="h2">Details for client <i>"@clientId"</i></h1>
