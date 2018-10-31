@@ -112,7 +112,7 @@
     padding-right: 1rem !important;
 }
 
-.navbar-brand {
+.navbar-brand , .navbar-brand a:hover, .navbar-brand a:focus{
     color: #fff;
 }
 
