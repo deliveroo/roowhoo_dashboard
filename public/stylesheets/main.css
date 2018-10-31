@@ -94,3 +94,36 @@
     margin-bottom: 0px !important;
 }
 
+
+.deliveroo-logo {
+    height: 48px;
+    width: 48px;
+    position: relative;
+}
+
+.deliveroo-logo path {
+    fill: #FFF;
+}
+
+.pl-3, .px-3 {
+    padding-left: 1rem !important;
+}
+.pr-3, .px-3 {
+    padding-right: 1rem !important;
+}
+
+.navbar-brand {
+    color: #fff;
+}
+
+.flex-column {
+    -webkit-box-orient: vertical !important;
+    -webkit-box-direction: normal !important;
+    -ms-flex-direction: column !important;
+    flex-direction: column !important;
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333;
+}
