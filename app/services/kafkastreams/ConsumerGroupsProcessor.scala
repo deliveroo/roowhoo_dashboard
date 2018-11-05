@@ -40,6 +40,7 @@ object ConsumerGroupsProcessor extends LazyLogging  {
     val STORE_CHANGE_LOG_ADDITIONAL_RETENTION = 5 * 24 * 60 * 60 * 1000
     props.put(StreamsConfig.WINDOW_STORE_CHANGE_LOG_ADDITIONAL_RETENTION_MS_CONFIG, STORE_CHANGE_LOG_ADDITIONAL_RETENTION.toString)
     props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.RETENTION_BYTES_CONFIG, "3600000")
+    props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.RETENTION_MS_CONFIG, "3600000")
     props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE)
     props.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, s"${config.brokerProtocol}")
     props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
