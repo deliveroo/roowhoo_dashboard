@@ -18,6 +18,7 @@ import org.apache.kafka.common.utils.Bytes
 import org.apache.kafka.streams._
 import org.apache.kafka.streams.kstream._
 import org.apache.kafka.streams.state.WindowStore
+import play.api.Logger
 import util.StreamConfig
 
 
@@ -94,8 +95,10 @@ object ConsumerGroupsProcessor extends LazyLogging  {
           .withValueSerde(CustomSerdes.activeGroup)
       )
 
-    val streams: KafkaStreams = new KafkaStreams(builder.build(), streamProperties(config))
+    val topology = builder.build()
+    val streams: KafkaStreams = new KafkaStreams(topology, streamProperties(config))
     streams.start()
+    Logger.info(topology.describe().toString)
     streams
   }
 
