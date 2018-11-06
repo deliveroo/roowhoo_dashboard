@@ -40,7 +40,7 @@ object Frontend {
 
   def clientsWithRiskClientIds(activeGroups: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]): Seq[ClientDetails] =
     activeGroups.filter(ag =>
-      riskClientIds.contains(ag._2.clientId) || riskClientIds.exists(ag._2.clientId.startsWith(_))
+      isRisky(ag._2.clientId)
     ).map(_._2)
 
 }
