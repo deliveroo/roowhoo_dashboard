@@ -16,7 +16,7 @@ object Content {
     }).groupBy({case(_,clientDetails,_) => clientDetails.group})
       .filterKeys(g => !g.startsWith("_"))
       .map(_._2).toSeq.flatten.sortWith({ case (a, b) =>
-      a._1.window().start < b._1.window().start
+      a._1.window().start > b._1.window().start
     })
   }
 
