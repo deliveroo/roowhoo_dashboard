@@ -1,5 +1,7 @@
 package controllers
 
+import java.time.{ZoneId, ZonedDateTime}
+
 import javax.inject._
 import models.ActiveGroup
 import org.apache.kafka.streams.KafkaStreams.State
@@ -33,7 +35,17 @@ class DashboardController @Inject()(playConfig: Configuration,
 
         val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
 
-        val activeGroups = Content.groupWindowedActiveGroupByClientDetails(KafkaUtils.getLatestStores(iterator))
+        val todayActiveGroups = KafkaUtils.getLatestStores(iterator).filter(v => {
+          val utcZone = ZoneId.of("UTC")
+          val todayUTC = ZonedDateTime.now(utcZone)
+            .`with`(java.time.temporal.ChronoField.HOUR_OF_DAY, 0)
+            .`with`( java.time.temporal.ChronoField.MINUTE_OF_HOUR, 0)
+            .`with`( java.time.temporal.ChronoField.SECOND_OF_MINUTE, 0)
+            .`with`( java.time.temporal.ChronoField.MICRO_OF_SECOND, 0)
+
+          v.key.window().start >  todayUTC.toInstant.toEpochMilli
+        })
+        val activeGroups = Content.groupWindowedActiveGroupByClientDetails(todayActiveGroups)
 
         Ok(views.html.dashboard(activeGroups))
 
