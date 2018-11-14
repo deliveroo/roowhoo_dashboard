@@ -41,7 +41,7 @@ object ConsumerGroupsProcessor extends LazyLogging  {
     props.put(StreamsConfig.WINDOW_STORE_CHANGE_LOG_ADDITIONAL_RETENTION_MS_CONFIG, STORE_CHANGE_LOG_ADDITIONAL_RETENTION.toString)
     props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.RETENTION_BYTES_CONFIG, "3600000")
     props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE)
-    props.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
+    props.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, s"${config.brokerProtocol}")
     props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
     props.put(SASL_JAAS_CONFIG, "org.apache.kafka.common.security.scram.ScramLoginModule required " +
       s"""username="${config.userName}"  password="${config.password}";""")
