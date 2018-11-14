@@ -108,6 +108,11 @@
 .pl-3, .px-3 {
     padding-left: 1rem !important;
 }
+
+.pa-3 {
+    padding: 1rem !important;
+}
+
 .pr-3, .px-3 {
     padding-right: 1rem !important;
 }

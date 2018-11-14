@@ -8,25 +8,18 @@ import play.api.libs.json.{Json, OFormat}
 
 import scala.collection.JavaConverters._
 
-object ALIAS {
-  type Topic= String
-  type PartitionNumber = Int
-  type ConsumerInstanceId = String
-  type GroupId = String
-  type ClientId = String
-}
 final case class ConsumerInstanceDetails(
-                                   id: ALIAS.ConsumerInstanceId,
+                                   id: ConsumerInstanceId,
                                    host: String,
                                    rebalanceTimeoutMs: Long,
                                    sessionTimeoutMs:Long,
                                    protocolType:Set[String],
                                    protocols:Set[String],
-                                   assignedPartitions: Set[(ALIAS.Topic, ALIAS.PartitionNumber)])
+                                   assignedPartitions: Set[(Topic, PartitionNumber)])
 final case class ClientDetails(
-                                clientId: ALIAS.ClientId,
+                                clientId: ClientId,
                                 members: Set[ConsumerInstanceDetails],
-                                group: ALIAS.GroupId,
+                                group: GroupId,
                                 generationId: Long
                                 )
 

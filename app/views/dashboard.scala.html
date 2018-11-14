@@ -1,5 +1,5 @@
 @import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
-@import kafka.coordinator.group.ALIAS.Topic
+@import kafka.coordinator.group.Topic
 @import util.Frontend
 @import org.apache.kafka.streams.kstream.Windowed
 @(details: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])])

@@ -1,6 +1,6 @@
 package util
 
-import kafka.coordinator.group.ALIAS.{ClientId, Topic}
+import kafka.coordinator.group.{ClientId, Topic}
 import kafka.coordinator.group.{ClientDetails, ConsumerInstanceDetails}
 import org.apache.kafka.streams.kstream.Windowed
 

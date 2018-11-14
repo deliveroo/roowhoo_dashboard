@@ -4,8 +4,8 @@
 # ~~~~
 
 # An example controller showing a sample home page
+GET     /                              controllers.DashboardController.inbox
 GET     /all                           controllers.HomeController.index
-GET     /                              controllers.HomeController.dashboard
 GET     /last-five-minutes             controllers.HomeController.lastFiveMinutes
 GET     /between/:from/:to             controllers.HomeController.between(from:Long, to:Long)
 GET     /client/*id                    controllers.ClientController.index(id: String)

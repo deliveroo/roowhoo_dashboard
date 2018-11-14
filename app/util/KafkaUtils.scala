@@ -1,15 +1,17 @@
 package util
 
-import kafka.coordinator.group.ALIAS.{GroupId, Topic}
-import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerInstanceDetails}
-import kafka.security.auth.SimpleAclAuthorizer
-
-import scala.collection.JavaConverters._
 import java.net.InetAddress
 
 import com.typesafe.scalalogging.LazyLogging
+import kafka.admin.TopicCommand
+import kafka.coordinator.group.{GroupId, Topic}
+import kafka.coordinator.group.{ ActiveGroup, ClientDetails, ConsumerInstanceDetails}
+import kafka.security.auth.SimpleAclAuthorizer
 import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.kstream.Windowed
+
+import scala.collection.JavaConverters._
+
 
 object KafkaUtils extends LazyLogging {
   type UserName = String
@@ -17,10 +19,10 @@ object KafkaUtils extends LazyLogging {
   def getLatestStores(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]):
   Seq[KeyValue[Windowed[String], ActiveGroup]] = {
     iterator.groupBy({
-        case(keyValuePair) => keyValuePair.value.clientDetails.group}).mapValues(s =>
-          s.sortWith({case(a,b) =>
-            a.key.window().start > b.key.window().start
-          }
+      case(keyValuePair) => keyValuePair.value.clientDetails.group}).mapValues(s =>
+      s.sortWith({case(a,b) =>
+        a.key.window().start > b.key.window().start
+      }
       ).headOption.toSeq
     ).values.toSeq.flatten
   }

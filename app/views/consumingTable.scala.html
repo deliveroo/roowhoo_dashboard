@@ -1,5 +1,5 @@
 @import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
-@import kafka.coordinator.group.ALIAS.Topic
+@import kafka.coordinator.group.Topic
 @import org.apache.kafka.streams.kstream.Windowed
 @import util.Frontend
 @(details: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])])
@@ -21,7 +21,7 @@
     </thead>
     <tbody>
     @for(d <- details) {
-      <tr class="@Frontend.colorRow(d._2)">
+    <tr class="@Frontend.colorRow(d._2)">
       <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().start()))</td>
       <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().end()))</td>
       <td rowspan=@(d._3.size) >@(d._2.group)</td>
@@ -32,11 +32,11 @@
       <td>@(d._3.head._2.size)</td>
     </tr>
 
-      @for(consumingDetails <- d._3.tail) {
-          <tr class="@Frontend.colorRow(d._2)">
-            <td>@consumingDetails._1</td>
-            <td>@consumingDetails._2.size</td>
-          </tr>
+    @for(consumingDetails <- d._3.tail) {
+    <tr class="@Frontend.colorRow(d._2)">
+      <td>@consumingDetails._1</td>
+      <td>@consumingDetails._2.size</td>
+    </tr>
 
     }
     }

@@ -1,4 +1,4 @@
-package kafkastreams
+package services.kafkastreams
 
 import java.nio.ByteBuffer
 import java.time.Instant

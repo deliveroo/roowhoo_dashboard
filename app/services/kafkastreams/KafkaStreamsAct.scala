@@ -1,4 +1,4 @@
-package kafkastreams
+package services.kafkastreams
 
 import play.api.inject.{SimpleModule, _}
 import javax.inject.Inject
