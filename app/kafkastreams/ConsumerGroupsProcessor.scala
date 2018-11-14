@@ -24,23 +24,24 @@ import util.Config
 object ConsumerGroupsProcessor extends LazyLogging  {
   import ConsumerOffsetsFn._
 
-  val offsetTopic:String = "__consumer_offsets"
+  val offsetTopic = "__consumer_offsets"
 
   val OFFSETS_AND_META_WINDOW_STORE_NAME = "active-groups"
 
   def streamProperties(config: Config) = {
     val props = new Properties()
-    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "roowhoo")
+    val APP_NAME = s"roowhoo-${config.appVersion}"
+    props.put(StreamsConfig.APPLICATION_ID_CONFIG, APP_NAME)
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServer)
     props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass)
     props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, new ClientDetailsSerde().getClass)
     props.put("exclude.internal.topics", "false") // necessary to consume __consumer_offsets
-
+    props.put(StreamsConfig.CLIENT_ID_CONFIG, APP_NAME)
     props.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
     props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
     props.put(SASL_JAAS_CONFIG, "org.apache.kafka.common.security.scram.ScramLoginModule required " +
       s"""username="${config.userName}"  password="${config.password}";""")
-    props.put(StreamsConfig.APPLICATION_SERVER_CONFIG,  "0.0.0.0:8082")
+    props.put(StreamsConfig.APPLICATION_SERVER_CONFIG,  "0.0.0.0:9000")
     props.put(StreamsConfig.RETRIES_CONFIG, "5")
     props.put(StreamsConfig.RETRY_BACKOFF_MS_CONFIG, "300")
     props
@@ -91,17 +92,10 @@ object ConsumerGroupsProcessor extends LazyLogging  {
     val streams: KafkaStreams = new KafkaStreams(builder.build(), streamProperties(config))
     streams.start()
     streams
-    //    val routes: Route = ConsumerGroupsEndpoints.routesFor(streams)
-    //    val serverBinding: Http.ServerBinding = Await.result(Http().bindAndHandle(routes, "0.0.0.0", 8082), 60.seconds)
-    //
-    //    sys.addShutdownHook{
-    //      serverBinding.unbind()
-    //      streams.close()
-    //    }
-
   }
 
   def shutdown(stream: KafkaStreams): Unit = {
     stream.close()
+    stream.cleanUp()
   }
 }
