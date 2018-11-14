@@ -36,7 +36,7 @@ class HomeController @Inject()(playConfig: Configuration, cc: ControllerComponen
   }
 
   private val STORENAME =
-    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(Config(playConfig))
+    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
 
   private def getWindowsBetween(streams: KafkaStreams, from: Long, to: Long) = {
     val offsetsMetaWindowStore = streams.store(STORENAME,

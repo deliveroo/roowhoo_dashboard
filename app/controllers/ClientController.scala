@@ -12,7 +12,7 @@ import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.QueryableStoreTypes
 import org.apache.kafka.streams.KeyValue
 import play.api.mvc._
-import util.{Config, KafkaUtils, ZookeeperConfig}
+import util.{StreamConfig, KafkaUtils, ZookeeperConfig}
 import play.api.Configuration
 import util.KafkaUtils.UserName
 
@@ -34,7 +34,7 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
    */
 
   private val STORENAME =
-    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(Config(playConfig))
+    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
 
   private def getContentDetails(
                                  iterator: Seq[KeyValue[Windowed[String], ActiveGroup]],

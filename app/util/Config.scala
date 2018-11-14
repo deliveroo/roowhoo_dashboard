@@ -1,12 +1,12 @@
 package util
 
 import play.api.Configuration
-case class Config(password: String, userName: String, bootstrapServer: String, brokerProtocol: String, postFix: String)
 
+case class StreamConfig(password: String, userName: String, bootstrapServer: String, brokerProtocol: String, postFix: String)
 case class ZookeeperConfig(port: Int, host: String)
 
-object Config {
-  def apply(playConfig: Configuration): Config = {
+object StreamConfig {
+  def apply(playConfig: Configuration): StreamConfig = {
     val password = playConfig.get[String]("kafka.password")
     val userName = playConfig.get[String]("kafka.userName")
     val bootstrapServer = playConfig.get[String]("bootstrap.server")
@@ -18,7 +18,7 @@ object Config {
       case _ => ""
     }
 
-    Config(password, userName, bootstrapServer, brokerProtocol, s"$envType$appVersion")
+    StreamConfig(password, userName, bootstrapServer, brokerProtocol, s"$envType$appVersion")
   }
 }
 

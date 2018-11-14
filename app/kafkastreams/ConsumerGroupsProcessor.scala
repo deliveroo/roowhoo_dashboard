@@ -18,7 +18,7 @@ import org.apache.kafka.common.utils.Bytes
 import org.apache.kafka.streams._
 import org.apache.kafka.streams.kstream._
 import org.apache.kafka.streams.state.WindowStore
-import util.Config
+import util.StreamConfig
 
 
 object ConsumerGroupsProcessor extends LazyLogging  {
@@ -26,9 +26,9 @@ object ConsumerGroupsProcessor extends LazyLogging  {
 
   val offsetTopic = "__consumer_offsets"
 
-  def OFFSETS_AND_META_WINDOW_STORE_NAME(config: Config):String = s"active-groups-${config.postFix}"
+  def OFFSETS_AND_META_WINDOW_STORE_NAME(config: StreamConfig):String = s"active-groups-${config.postFix}N9jPrf"
 
-  def streamProperties(config: Config) = {
+  def streamProperties(config: StreamConfig) = {
     val props = new Properties()
     val APP_NAME = s"roowhoo-${config.postFix}"
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, APP_NAME)
@@ -54,7 +54,7 @@ object ConsumerGroupsProcessor extends LazyLogging  {
   implicit val system: ActorSystem = ActorSystem("OffsetsViewer", ConfigFactory.load())
   implicit val _: ActorMaterializer = ActorMaterializer()
 
-  def stream(config: Config):KafkaStreams = {
+  def stream(config: StreamConfig):KafkaStreams = {
     val builder = new StreamsBuilderS()
 
     val offsetStream: KStreamS[Array[Byte], Array[Byte]] = builder.stream[Array[Byte], Array[Byte]](offsetTopic)
