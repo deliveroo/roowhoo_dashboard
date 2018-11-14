@@ -1,5 +1,7 @@
 package controllers
 
+import java.net.URLDecoder
+
 import javax.inject._
 import kafka.coordinator.group.ALIAS._
 import kafka.coordinator.group.{ActiveGroup, ConsumerInstanceDetails}
@@ -67,7 +69,7 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
     }
   }
 
-  def index(clientId: String) = Action { implicit request: Request[AnyContent] =>
+  def index(enCodedClientId: String) = Action { implicit request: Request[AnyContent] =>
     if(kafka.stream.state() == State.RUNNING) {
       kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
       val offsetsMetaWindowStore =
@@ -76,6 +78,8 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
           QueryableStoreTypes.windowStore[String, ActiveGroup]()
         )
 
+
+      val clientId = URLDecoder.decode(enCodedClientId, "UTF-8")
       val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
       val details = getContentDetails(iterator, clientId)
       val authorizer = KafkaUtils.authorizer(ZookeeperConfig(playConfig))
