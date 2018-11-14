@@ -1,4 +1,4 @@
-package services.kafkastreams
+package services.stream.GroupMetadataTopic
 
 import play.api.inject.{SimpleModule, _}
 import javax.inject.Inject
@@ -13,12 +13,11 @@ class KafkaStreamsAct extends SimpleModule(bind[KafkaTask].toSelf.eagerly())
 
 class KafkaTask @Inject()(actorSystem: ActorSystem,playConfig: Configuration)(lifecycle: ApplicationLifecycle)(implicit executionContext: ExecutionContext) {
 
-  val stream: KafkaStreams  = ConsumerGroupsProcessor.stream(StreamConfig(playConfig))
+  val stream: KafkaStreams  = StreamGroupMetadata.stream(StreamConfig(playConfig))
 
   actorSystem.registerOnTermination { () =>
       Future.successful({
-        println("CLOSE STREAM")
-        ConsumerGroupsProcessor.shutdown(stream)
+        StreamGroupMetadata.shutdown(stream)
       })
     }
 

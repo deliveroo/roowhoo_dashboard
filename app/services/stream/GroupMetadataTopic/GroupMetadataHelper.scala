@@ -1,24 +1,23 @@
-package services.kafkastreams
+package services.stream.GroupMetadataTopic
 
 import java.nio.ByteBuffer
 import java.time.Instant
 
-import kafka.coordinator.group._
-import kafka.coordinator.group.{ClientDetails, ConsumerOffsetDetails}
+import kafka.coordinator.group.{ClientDetails, ConsumerOffsetDetails, _}
 import org.apache.kafka.streams.kstream.Reducer
 import play.api.Logger
 
-object ConsumerOffsetsFn  {
-  def isOffset (key:Array[Byte], value:Array[Byte]): Boolean = {
+object GroupMetadataHelper  {
+  def isOffset (key:Array[Byte], value:Array[Byte]): Boolean =
     GroupMetadataManager.readMessageKey(ByteBuffer.wrap(key)) match {
       case _: OffsetKey => true
       case _: GroupMetadataKey => false
     }
-  }
 
-  def isGroupMetadata(key:Array[Byte], value:Array[Byte]): Boolean = {
+
+  def isGroupMetadata(key:Array[Byte], value:Array[Byte]): Boolean =
     !isOffset(key, value)
-  }
+
   def isTombstone(k: Array[Byte], v: Array[Byte]): Boolean  =
     v == null
 

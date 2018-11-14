@@ -4,7 +4,7 @@ import kafka.coordinator.group._
 import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.kstream.Windowed
 
-object ContentUtils {
+object Content {
 
   def groupWindowedActiveGroupByClientDetails(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]
                        ): Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])] = {

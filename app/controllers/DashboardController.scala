@@ -8,7 +8,7 @@ import org.apache.kafka.streams.state.QueryableStoreTypes
 import org.apache.kafka.streams.KeyValue
 import play.api.Configuration
 import play.api.mvc._
-import services.kafkastreams._
+import services.stream.GroupMetadataTopic.KafkaTask
 import util._
 
 import scala.collection.JavaConverters._
@@ -33,7 +33,7 @@ class DashboardController @Inject()(playConfig: Configuration,
 
         val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
 
-        val activeGroups = ContentUtils.groupWindowedActiveGroupByClientDetails(KafkaUtils.getLatestStores(iterator))
+        val activeGroups = Content.groupWindowedActiveGroupByClientDetails(KafkaUtils.getLatestStores(iterator))
 
         Ok(views.html.dashboard(activeGroups))
 

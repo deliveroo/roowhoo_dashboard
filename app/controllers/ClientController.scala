@@ -5,17 +5,17 @@ import java.net.URLDecoder
 import javax.inject._
 import kafka.coordinator.group.{ActiveGroup, ConsumerInstanceDetails, GroupId, Topic}
 import kafka.security.auth.SimpleAclAuthorizer
-import services.kafkastreams._
 import org.apache.kafka.streams.KafkaStreams.State
 import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.QueryableStoreTypes
 import org.apache.kafka.streams.KeyValue
 import play.api.mvc._
-import util.{ContentUtils, KafkaUtils, StreamConfig, ZookeeperConfig}
+import util.{Content, KafkaUtils, StreamConfig, ZookeeperConfig}
 import play.api.Configuration
+import services.stream.GroupMetadataTopic.KafkaTask
 import util.KafkaUtils.UserName
-
 import scala.collection.JavaConverters._
+
 
 @Singleton
 class ClientController @Inject()(playConfig: Configuration, cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) {
@@ -50,7 +50,7 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
 
         val clientId = URLDecoder.decode(enCodedClientId, "UTF-8")
         val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
-        val details = ContentUtils.groupWindowedActiveGroupByGroupId(iterator, clientId)
+        val details = Content.groupWindowedActiveGroupByGroupId(iterator, clientId)
         val authorizer = KafkaUtils.authorizer(ZookeeperConfig(playConfig))
         val aclsDetails: Map[(GroupId, Topic), Set[UserName]] = getAcls(authorizer, details)
         val adminAcls: Set[UserName] = KafkaUtils.currentACLS(authorizer, "*", "*")

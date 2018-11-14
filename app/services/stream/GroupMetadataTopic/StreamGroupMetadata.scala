@@ -1,13 +1,10 @@
-package services.kafkastreams
+package services.stream.GroupMetadataTopic
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import com.lightbend.kafka.scala.streams.DefaultSerdes._
 import com.lightbend.kafka.scala.streams.ImplicitConversions._
 import com.lightbend.kafka.scala.streams.{KStreamS, KTableS, StreamsBuilderS}
-import com.typesafe.config.ConfigFactory
 import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
-import kafka.coordinator.serializer.{CustomSerdes}
+import kafka.coordinator.serializer.CustomSerdes
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes
 import org.apache.kafka.streams._
@@ -15,29 +12,27 @@ import org.apache.kafka.streams.kstream._
 import org.apache.kafka.streams.state.WindowStore
 import play.api.Logger
 import util.StreamConfig
-import ConsumerOffsetsFn._
+import GroupMetadataHelper._
+import org.apache.kafka.common.internals.Topic
 
 
-object ConsumerGroupsProcessor  {
-  val offsetTopic = "__consumer_offsets"
-
-  implicit val system: ActorSystem = ActorSystem("OffsetsViewer", ConfigFactory.load())
-  implicit val _: ActorMaterializer = ActorMaterializer()
+object StreamGroupMetadata  {
+  val GROUP_METADATA_TOPIC_NAME = Topic.GROUP_METADATA_TOPIC_NAME //__consumer_offsets
 
   def stream(config: StreamConfig):KafkaStreams = {
     val builder = new StreamsBuilderS()
 
-    val offsetStream: KStreamS[Array[Byte], Array[Byte]] = builder.stream[Array[Byte], Array[Byte]](offsetTopic)
-    val Array(offsetKeyStream, groupMetadataKeyStream) = offsetStream.branch(isOffset,isGroupMetadata)
+    val offsetStream: KStreamS[Array[Byte], Array[Byte]] = builder.stream[Array[Byte], Array[Byte]](GROUP_METADATA_TOPIC_NAME)
+    val Array(offsetKeyStream, groupMetadataKeyStream) = offsetStream
+      .filterNot(isTombstone)
+      .branch(isOffset,isGroupMetadata)
 
     val offsetCommitsLastTenMins: KStreamS[String, ConsumerOffsetDetails] = offsetKeyStream
-      .filterNot(isTombstone)
       .map[String,ConsumerOffsetDetails](offsetConsumerGroupKey)
       .filter(isCommittedLastTenMins)
 
 
     val groupMetadataCommits: KTableS[String, ClientDetails] = groupMetadataKeyStream
-      .filterNot(isTombstone)
       .map[String, ClientDetails](groupMetadataConsumerGroupKey)
       .filterNot((_, c) => ClientDetails.isEmpty(c))
       .groupByKey(Serialized.`with`(Serdes.String(), CustomSerdes.clientDetailsSerde))
