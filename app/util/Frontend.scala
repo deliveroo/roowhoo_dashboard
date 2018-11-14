@@ -6,11 +6,16 @@ import org.apache.kafka.streams.kstream.Windowed
 
 object Frontend {
 
-  val riskClientIds = Seq("rdkafka", "ruby-kafka", "consumer-1", "nonode@nohost")
+  val riskClientIds = Seq("rdkafka", "ruby-kafka", "nonode@nohost")
+
+  def isRisky(clientId: ClientId): Boolean =
+    riskClientIds.contains(clientId) ||
+    riskClientIds.exists(clientId.startsWith(_)) ||
+    clientId.matches("consumer-\\d+")
 
   val internalStreamTopic = "KSTREAM"
   def colorRow(clientDetails: ClientDetails): String  = {
-    if(riskClientIds.contains(clientDetails.clientId) || riskClientIds.exists(clientDetails.clientId.startsWith(_))) "text-light risk"
+    if(isRisky(clientDetails.clientId)) "text-light risk"
     else {
       if(clientDetails.group.startsWith("_")
         || clientDetails.clientId.startsWith("perf")

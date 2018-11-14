@@ -9,8 +9,6 @@
 
 @main("RooWhoo - Client " + clientId) {
 
-@defining(Frontend.riskClientIds) { riskClientIDS =>
-
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
   <h1 class="h2">Details for client <i>"@clientId"</i></h1>
 </div>
@@ -18,7 +16,7 @@
 @if(details.isEmpty){
 <p>No Details about this client, the client maybe not exist or Kafka stream still looking</p>
 }else {
-@if(riskClientIDS.contains(clientId) || riskClientIDS.exists(clientId.startsWith(_))  ){
+@if(Frontend.isRisky(clientId)){
 
 <blockquote class="risk text-light">
   <p>Please notify the author of this application to set a client id.</p>
@@ -72,6 +70,5 @@
 
 </div>
 
-}
 }
 }
