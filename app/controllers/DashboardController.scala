@@ -1,6 +1,5 @@
 package controllers
 
-import com.typesafe.scalalogging.LazyLogging
 import javax.inject._
 import kafka.coordinator.group.ActiveGroup
 import org.apache.kafka.streams.KafkaStreams.State
@@ -15,10 +14,12 @@ import util._
 import scala.collection.JavaConverters._
 
 @Singleton
-class DashboardController @Inject()(playConfig: Configuration, cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) with LazyLogging {
+class DashboardController @Inject()(playConfig: Configuration,
+                                    cc: ControllerComponents,
+                                    kafka: KafkaTask) extends AbstractController(cc) {
 
   private val STORENAME =
-    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
+    StreamConfig.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
 
   def inbox()  = Action { implicit request: Request[AnyContent] =>
     kafka.stream.state() match {

@@ -2,7 +2,6 @@ package util
 
 import java.net.InetAddress
 
-import com.typesafe.scalalogging.LazyLogging
 import kafka.admin.TopicCommand
 import kafka.coordinator.group.{GroupId, Topic}
 import kafka.coordinator.group.{ ActiveGroup, ClientDetails, ConsumerInstanceDetails}
@@ -13,7 +12,7 @@ import org.apache.kafka.streams.kstream.Windowed
 import scala.collection.JavaConverters._
 
 
-object KafkaUtils extends LazyLogging {
+object KafkaUtils {
   type UserName = String
 
   def getLatestStores(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]):
@@ -36,9 +35,6 @@ object KafkaUtils extends LazyLogging {
 
   def authorizer(zookeeperConfig: ZookeeperConfig): SimpleAclAuthorizer = {
     val zkHost = InetAddress.getByName(zookeeperConfig.host).getHostAddress
-    logger.info("***********")
-    logger.info(zookeeperConfig.host)
-    logger.info(zkHost)
     new SimpleAclAuthorizer() {
       configure(Map("zookeeper.connect" -> s"$zkHost:${zookeeperConfig.port}").asJava)
     }

@@ -3,12 +3,12 @@ package services.kafkastreams
 import java.nio.ByteBuffer
 import java.time.Instant
 
-import com.typesafe.scalalogging.LazyLogging
 import kafka.coordinator.group._
 import kafka.coordinator.group.{ClientDetails, ConsumerOffsetDetails}
 import org.apache.kafka.streams.kstream.Reducer
+import play.api.Logger
 
-object ConsumerOffsetsFn  extends LazyLogging  {
+object ConsumerOffsetsFn  {
   def isOffset (key:Array[Byte], value:Array[Byte]): Boolean = {
     GroupMetadataManager.readMessageKey(ByteBuffer.wrap(key)) match {
       case _: OffsetKey => true
@@ -23,7 +23,7 @@ object ConsumerOffsetsFn  extends LazyLogging  {
     v == null
 
   def isCommittedLastTenMins (k:String ,v: ConsumerOffsetDetails): Boolean =  {
-    logger.info(s"####v: ${v}")
+    Logger.info(s"####v: ${v}")
     val commitTs = Instant.ofEpochMilli(v.commitTimestamp)
     val now = Instant.now()
     val tenMinutesAgo = now.minusSeconds(600)

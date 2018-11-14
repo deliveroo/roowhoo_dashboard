@@ -2,7 +2,6 @@ package controllers
 
 import java.time.Instant
 
-import com.typesafe.scalalogging.LazyLogging
 import javax.inject._
 import kafka.coordinator.group.ActiveGroup
 import services.kafkastreams._
@@ -17,10 +16,12 @@ import util._
 import scala.collection.JavaConverters._
 
 @Singleton
-class HomeController @Inject()(playConfig: Configuration, cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) with LazyLogging {
+class HomeController @Inject()(playConfig: Configuration,
+                               cc: ControllerComponents,
+                               kafka: KafkaTask) extends AbstractController(cc) {
 
   private val STORENAME =
-    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
+    StreamConfig.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
 
   private def getWindowsBetween(streams: KafkaStreams, from: Long, to: Long) = {
     val offsetsMetaWindowStore = streams.store(STORENAME,

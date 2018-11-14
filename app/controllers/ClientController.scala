@@ -22,7 +22,7 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
 
 
   private val STORENAME =
-    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
+    StreamConfig.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))
 
   private def getAcls(
                        authorizer: SimpleAclAuthorizer,
