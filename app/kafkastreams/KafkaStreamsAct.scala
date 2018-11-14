@@ -4,7 +4,7 @@ import play.api.inject.{SimpleModule, _}
 import javax.inject.Inject
 import akka.actor.ActorSystem
 import org.apache.kafka.streams.KafkaStreams
-import play.api.Configuration
+import play.api.{ApplicationLoader, Configuration}
 import util.Config
 
 import scala.concurrent.{ExecutionContext, Future}

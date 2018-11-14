@@ -1,8 +1,7 @@
 package util
 
 import play.api.Configuration
-
-case class Config(password: String, userName: String, bootstrapServer: String, brokerProtocol: String, appVersion: String)
+case class Config(password: String, userName: String, bootstrapServer: String, brokerProtocol: String, postFix: String)
 
 case class ZookeeperConfig(port: Int, host: String)
 
@@ -13,7 +12,13 @@ object Config {
     val bootstrapServer = playConfig.get[String]("bootstrap.server")
     val brokerProtocol = playConfig.get[String]("brokerProtocol")
     val appVersion = playConfig.get[String]("app.version")
-    Config(password, userName, bootstrapServer, brokerProtocol, appVersion)
+
+    val envType = playConfig.get[String]("env") match {
+      case e if e == "dev" || e == "test" => "-dev-"
+      case _ => ""
+    }
+
+    Config(password, userName, bootstrapServer, brokerProtocol, s"$envType$appVersion")
   }
 }
 

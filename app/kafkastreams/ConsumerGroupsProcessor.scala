@@ -26,11 +26,11 @@ object ConsumerGroupsProcessor extends LazyLogging  {
 
   val offsetTopic = "__consumer_offsets"
 
-  val OFFSETS_AND_META_WINDOW_STORE_NAME = "active-groups"
+  def OFFSETS_AND_META_WINDOW_STORE_NAME(config: Config):String = s"active-groups-${config.postFix}"
 
   def streamProperties(config: Config) = {
     val props = new Properties()
-    val APP_NAME = s"roowhoo-${config.appVersion}"
+    val APP_NAME = s"roowhoo-${config.postFix}"
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, APP_NAME)
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServer)
     props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass)
@@ -88,7 +88,7 @@ object ConsumerGroupsProcessor extends LazyLogging  {
         (a1: ActiveGroup, a2: ActiveGroup) => {
           a2},
         Materialized
-          .as[String, ActiveGroup, WindowStore[Bytes, Array[Byte]]](OFFSETS_AND_META_WINDOW_STORE_NAME)
+          .as[String, ActiveGroup, WindowStore[Bytes, Array[Byte]]](OFFSETS_AND_META_WINDOW_STORE_NAME(config))
           .withKeySerde(Serdes.String())
           .withValueSerde(CustomSerdes.activeGroup)
       )

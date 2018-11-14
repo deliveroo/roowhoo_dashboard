@@ -12,7 +12,7 @@ import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.QueryableStoreTypes
 import org.apache.kafka.streams.KeyValue
 import play.api.mvc._
-import util.{KafkaUtils, ZookeeperConfig}
+import util.{Config, KafkaUtils, ZookeeperConfig}
 import play.api.Configuration
 import util.KafkaUtils.UserName
 
@@ -32,6 +32,9 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
    * will be called when the application receives a `GET` request with
    * a path of `/`.
    */
+
+  private val STORENAME =
+    ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME(Config(playConfig))
 
   private def getContentDetails(
                                  iterator: Seq[KeyValue[Windowed[String], ActiveGroup]],
@@ -72,10 +75,10 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
   def index(enCodedClientId: String) = Action { implicit request: Request[AnyContent] =>
     kafka.stream.state() match {
       case State.RUNNING =>
-        kafka.stream.allMetadataForStore(ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME)
+        kafka.stream.allMetadataForStore(STORENAME)
         val offsetsMetaWindowStore =
           kafka.stream.store(
-            ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME,
+            STORENAME,
             QueryableStoreTypes.windowStore[String, ActiveGroup]()
           )
 
