@@ -54,11 +54,6 @@ class ClientController @Inject()(cc: ControllerComponents, kafka: KafkaTask) ext
 
       val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
       val details = getContentDetails(iterator, clientId)
-      details.foreach(d=>{
-        val x = d._2.foldLeft[Int](0)(_ + _._2.size)
-        x
-        d._2.head._2.head.assignedPartitions.map(_._2).mkString(", ")
-      })
       Ok(views.html.client(details, clientId))
 
     } else {
