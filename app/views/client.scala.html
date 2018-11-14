@@ -7,7 +7,7 @@
 
 @(details: Map[GroupId , Map[Topic, Set[ConsumerInstanceDetails]]], clientId: String, aclsDetails: Map[(GroupId, Topic), Set[UserName]], adminAcls: Set[UserName])
 
-@main("Kafka Active Consumers") {
+@main("RooWhoo - Client " + clientId) {
 
 @defining(Frontend.riskClientIds) { riskClientIDS =>
 
