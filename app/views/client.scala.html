@@ -1,8 +1,9 @@
 @import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
 @import kafka.coordinator.group.ALIAS.{Topic, GroupId}
+@import util.KafkaUtils.UserName
 @import org.apache.kafka.streams.kstream.Windowed
 @import org.apache.kafka.streams.KeyValue
-@(details: Map[GroupId , Map[Topic, Set[ConsumerInstanceDetails]]], clientId: String)
+@(details: Map[GroupId , Map[Topic, Set[ConsumerInstanceDetails]]], clientId: String, aclsDetails: Map[(GroupId, Topic), Set[UserName]], adminAcls: Set[UserName])
 
 @main("Kafka Active Consumers") {
 
@@ -17,7 +18,7 @@
 }else {
 @if(riskClientIDS.contains(clientId)){
 
-<blockquote class="risk">
+<blockquote class="risk text-light">
   <p>Please notify the author of this application to set a client id.</p>
 </blockquote>
 }
@@ -27,6 +28,7 @@
     <tr>
       <th rowspan="2">Group ID</th>
       <th rowspan="2">Topic</th>
+      <th rowspan="2">Potential Users</th>
       <th colspan="3" >Consumer Details</th>
     </tr>
     <tr>
@@ -37,26 +39,36 @@
     </thead>
     <tbody>
 
-    @for(d <- details) {
+    @for(gd <- details) {
       <tr>
-        <td rowspan=@(d._2.size + d._2.foldLeft[Int](0)(_ + _._2.size)) >@d._1</td>
-      @for(t <- d._2) {
+        <td rowspan=@(gd._2.size + gd._2.foldLeft[Int](0)(_ + _._2.size)) >
+          @gd._1
+        </td>
+        @for(t <- gd._2) {
         <td rowspan=@(t._2.size + 1) >@t._1</td>
+        <td rowspan=@(t._2.size + 1) >
+          @if(aclsDetails.get((gd._1, t._1)).isEmpty){
+            <b>There's no specific user, the client could be using one of the admin users</b>
+            <ul>@for(usr <- adminAcls){<li>@usr</li>}</ul>
+          }else{
+          <ul>@for(usr <- aclsDetails.get((gd._1, t._1)).get){<li>@usr</li>}</ul>
+          }
+        </td>
 
       </tr>
       @for(i <- t._2) {
       <tr>
           <td> @i.id </td>
           <td> @i.host </td>
-          <td> @i.assignedPartitions.filter(_._1 == d._2.head._1).map(_._2).mkString(", ") </td>
+          <td> @i.assignedPartitions.filter(_._1 == gd._2.head._1).map(_._2).mkString(", ") </td>
       </tr>
       }
     }
     }
-
     </tbody>
   </table>
 </div>
+
 }
 }
 }

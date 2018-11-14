@@ -1,17 +1,18 @@
 package controllers
 
-import java.time.Instant
-
 import javax.inject._
 import kafka.coordinator.group.ALIAS._
-import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerInstanceDetails}
+import kafka.coordinator.group.{ActiveGroup, ConsumerInstanceDetails}
+import kafka.security.auth.SimpleAclAuthorizer
 import kafkastreams._
 import org.apache.kafka.streams.KafkaStreams.State
 import org.apache.kafka.streams.kstream.Windowed
-import org.apache.kafka.streams.state.{KeyValueIterator, QueryableStoreTypes}
-import org.apache.kafka.streams.{KafkaStreams, KeyValue}
+import org.apache.kafka.streams.state.QueryableStoreTypes
+import org.apache.kafka.streams.KeyValue
 import play.api.mvc._
-import util.KafkaUtils
+import util.{KafkaUtils, ZookeeperConfig}
+import play.api.Configuration
+import util.KafkaUtils.UserName
 
 import scala.collection.JavaConverters._
 
@@ -20,7 +21,7 @@ import scala.collection.JavaConverters._
  * application's home page.
  */
 @Singleton
-class ClientController @Inject()(cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) {
+class ClientController @Inject()(playConfig: Configuration, cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) {
 
   /**
    * Create an Action to render an HTML page.
@@ -37,10 +38,23 @@ class ClientController @Inject()(cc: ControllerComponents, kafka: KafkaTask) ext
     iterator
       .filter(_.value.clientDetails.clientId == clientId)
       .map { itr =>
-        (itr.value.consumerOffsets.group, KafkaUtils.groupPerTopic(itr.value.clientDetails))
+        val groupedByTopic = KafkaUtils.groupPerTopic(itr.value.clientDetails)
+        (itr.value.consumerOffsets.group, groupedByTopic)
       }
       .groupBy(_._1).mapValues(v => v.map(_._2).flatten.toMap)
+  }
 
+  private def getAcls(
+                       authorizer: SimpleAclAuthorizer,
+                       details:  Map[GroupId, Map[Topic, Set[ConsumerInstanceDetails]]]
+                     ): Map[(GroupId, Topic), Set[UserName]] = {
+    details.flatMap {
+      case (groupId, topicdetails) => {
+        topicdetails.keys.map( t=>
+          (groupId, t) -> KafkaUtils.currentACLS(authorizer, t, groupId)
+        ).toMap
+      }
+    }
   }
 
   def index(clientId: String) = Action { implicit request: Request[AnyContent] =>
@@ -54,7 +68,11 @@ class ClientController @Inject()(cc: ControllerComponents, kafka: KafkaTask) ext
 
       val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
       val details = getContentDetails(iterator, clientId)
-      Ok(views.html.client(details, clientId))
+      val authorizer = KafkaUtils.authorizer(ZookeeperConfig(playConfig))
+      val aclsDetails: Map[(GroupId, Topic), Set[UserName]] = getAcls(authorizer, details)
+      val adminAcls: Set[UserName] = KafkaUtils.currentACLS(authorizer, "*", "*")
+
+      Ok(views.html.client(details, clientId, aclsDetails, adminAcls))
 
     } else {
       Ok("Stream isn't ready")
