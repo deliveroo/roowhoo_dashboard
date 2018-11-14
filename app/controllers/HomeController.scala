@@ -13,7 +13,7 @@ import org.apache.kafka.streams.state.{KeyValueIterator, QueryableStoreTypes}
 import org.apache.kafka.streams.{KafkaStreams, KeyValue}
 import play.api.Configuration
 import play.api.mvc._
-import util.{Config, KafkaUtils}
+import util._
 
 import scala.collection.JavaConverters._
 
@@ -46,6 +46,28 @@ class HomeController @Inject()(playConfig: Configuration, cc: ControllerComponen
     iterator
   }
 
+  def dashboard()  = Action { implicit request: Request[AnyContent] =>
+    kafka.stream.state() match {
+      case State.RUNNING =>
+        kafka.stream.allMetadataForStore(STORENAME)
+        val offsetsMetaWindowStore =
+          kafka.stream.store(
+            STORENAME,
+            QueryableStoreTypes.windowStore[String, ActiveGroup]()
+          )
+
+        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
+
+        val activeGroups = getContentDetails(KafkaUtils.getLatestStores(iterator))
+
+        Ok(views.html.dashboard(activeGroups))
+
+      case State.ERROR => InternalServerError("ERROR")
+      case _ =>
+        Ok(views.html.loading())
+
+    }
+  }
   def index() = Action { implicit request: Request[AnyContent] =>
     kafka.stream.state() match {
       case State.RUNNING =>
@@ -73,11 +95,6 @@ class HomeController @Inject()(playConfig: Configuration, cc: ControllerComponen
         val fiveMinsAgo = now.minusSeconds(300L)
 
         kafka.stream.allMetadataForStore(STORENAME)
-        kafka.stream.store(
-          STORENAME,
-          QueryableStoreTypes.windowStore[String, ActiveGroup]()
-        )
-
         val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] =
           getWindowsBetween(kafka.stream, fiveMinsAgo.toEpochMilli, now.toEpochMilli).asScala.toList
         Ok(views.html.between(getContentDetails(iterator), fiveMinsAgo.toEpochMilli, now.toEpochMilli))

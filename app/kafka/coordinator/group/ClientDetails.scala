@@ -13,6 +13,7 @@ object ALIAS {
   type PartitionNumber = Int
   type ConsumerInstanceId = String
   type GroupId = String
+  type ClientId = String
 }
 final case class ConsumerInstanceDetails(
                                    id: ALIAS.ConsumerInstanceId,
@@ -23,9 +24,9 @@ final case class ConsumerInstanceDetails(
                                    protocols:Set[String],
                                    assignedPartitions: Set[(ALIAS.Topic, ALIAS.PartitionNumber)])
 final case class ClientDetails(
-                                clientId: String,
+                                clientId: ALIAS.ClientId,
                                 members: Set[ConsumerInstanceDetails],
-                                group: String,
+                                group: ALIAS.GroupId,
                                 generationId: Long
                                 )
 

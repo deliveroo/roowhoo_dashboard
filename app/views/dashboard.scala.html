@@ -1,0 +1,53 @@
+@import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
+@import kafka.coordinator.group.ALIAS.Topic
+@import util.Frontend
+@import org.apache.kafka.streams.kstream.Windowed
+@(details: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])])
+
+@main("Kafka Active Consumers") {
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Dashboard</h1>
+  <div class="container-fluid">
+    <div class="row text-center h4">
+      <div class="col-xs-6 col-md-4">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Active Consumers</div>
+          <div class="panel-body text-primary">@details.length</div>
+        </div>
+      </div>
+      <div class="col-xs-6 col-md-4">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Active Topics</div>
+          <div class="panel-body text-primary">@Frontend.activeTopics(details).size</div>
+        </div>
+      </div>
+      <div class="col-xs-6 col-md-4">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Internal Stream Topics</div>
+          <div class="panel-body text-primary">@Frontend.internalStreamTopics(details).size</div>
+        </div>
+      </div>
+    </div>
+    <div class="row  text-center h4">
+      <div class="col-xs-6 col-md-4">
+        @defining(Frontend.clientsWithRiskClientIds(details)){risks =>
+        <div @if(risks.length > 0){ class="panel panel-danger"} else{ class="panel panel-success"}>
+          <div class="panel-heading">Consumers With Default ClientId</div>
+          <div  @if(risks.length > 0){ class="panel-body text-danger"} else{ class="panel-body text-success"}>
+            @risks.length</div>
+        </div>
+        }
+
+      </div>
+    </div>
+
+    <div class="row">
+      <h2>Active Consumers</h2>
+      @consumingTable(details)
+    </div>
+
+  </div>
+</div>
+
+}
