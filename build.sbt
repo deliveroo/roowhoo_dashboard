@@ -3,8 +3,8 @@ name := "roowhoo-dashboard"
 version := "1.0"
 
 scalaVersion := "2.12.3"
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
+lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 libraryDependencies += "org.apache.kafka" % "kafka-streams" % "1.1.0"
 libraryDependencies += "org.apache.kafka" %% "kafka" % "1.1.0"
@@ -19,4 +19,12 @@ libraryDependencies +=  "org.webjars" % "bootstrap" % "3.0.3" exclude("org.webja
 libraryDependencies += "org.webjars" % "bootstrap-datetimepicker" % "2.4.2" exclude("org.webjars", "bootstrap")
 libraryDependencies += "org.webjars" % "jquery" % "2.2.4"
 enablePlugins(JavaAppPackaging)
+enablePlugins(UniversalPlugin)
+enablePlugins(DockerPlugin)
 enablePlugins(PlayScala)
+
+javaOptions in Universal ++= Seq(
+  // JVM memory tuning
+  "-J-Xmx1024m",
+  "-J-Xms512m"
+)
