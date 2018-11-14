@@ -3,7 +3,8 @@ package controllers
 import javax.inject._
 import java.time.Instant
 
-import kafka.coordinator.group.ALIAS.{Topic}
+import com.typesafe.scalalogging.LazyLogging
+import kafka.coordinator.group.ALIAS.Topic
 import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerInstanceDetails}
 import kafkastreams._
 import play.api.mvc._
@@ -20,7 +21,7 @@ import scala.collection.JavaConverters._
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) {
+class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) with LazyLogging {
 
   /**
    * Create an Action to render an HTML page.
@@ -107,7 +108,5 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
     } else Ok(views.html.loading())
 
   }
-
-
 }
 
