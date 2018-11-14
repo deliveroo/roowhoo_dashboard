@@ -11,5 +11,5 @@ libraryDependencies += "org.rogach" %% "scallop" % "3.0.3"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
 libraryDependencies += "com.typesafe.scala-logging" % "scala-logging_2.12" % "3.7.1"
 libraryDependencies += "com.typesafe.akka" % "akka-http_2.12" % "10.0.10"
-
+libraryDependencies += "com.lightbend" %% "kafka-streams-scala" % "0.2.1"
 enablePlugins(JavaAppPackaging)

@@ -3,12 +3,14 @@ package com.deliveroo.kafka.consumer.offsets.viewer
 import java.nio.ByteBuffer
 import java.time.Instant
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{complete, get, path, _}
 import akka.http.scaladsl.server.Route
 import com.deliveroo.kafka.consumer.offsets.viewer.ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME
 import com.typesafe.scalalogging.LazyLogging
-import kafka.coordinator.group.{GroupMetadataKey, GroupMetadataManager, OffsetKey}
+import kafka.coordinator.group.{ActiveGroup, GroupMetadataKey, GroupMetadataManager, OffsetKey}
 import org.apache.kafka.streams.KafkaStreams
+import org.apache.kafka.streams.KafkaStreams.State
 import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.{KeyValueIterator, QueryableStoreTypes}
 
@@ -19,32 +21,36 @@ object ConsumerGroupsEndpoints extends LazyLogging {
   def routesFor(streams: KafkaStreams): Route = {
     path("all") {
       get {
-        val offsetsMetaWindowStore = streams.store(OFFSETS_AND_META_WINDOW_STORE_NAME, QueryableStoreTypes.windowStore[String, String]())
+        if(streams.state() == State.RUNNING) {
+          streams.allMetadataForStore(OFFSETS_AND_META_WINDOW_STORE_NAME)
+          val offsetsMetaWindowStore = streams.store(OFFSETS_AND_META_WINDOW_STORE_NAME, QueryableStoreTypes.windowStore[String, ActiveGroup]())
 
-        val iterator: KeyValueIterator[Windowed[String], String] = offsetsMetaWindowStore.all()
+          val iterator: KeyValueIterator[Windowed[String], ActiveGroup] = offsetsMetaWindowStore.all()
 
-        complete {
-          s"${iterateThenClose[Windowed[String], String](iterator)(windowedRecordAsString)}"
-        }
+          complete {
+            s"${iterateThenClose[Windowed[String], ActiveGroup](iterator)(windowedRecordAsString)}"
+          }
+        } else complete( StatusCodes.InternalServerError -> "STREAM ISN'T RUNNING NOW" )
+
       }
     } ~
     path("last-five-minutes") {
       get {
         val now = Instant.now()
         val fiveMinsAgo = now.minusSeconds(300L)
-        val iterator: KeyValueIterator[Windowed[String], String] = getWindowsBetween(streams, fiveMinsAgo.toEpochMilli, now.toEpochMilli)
+        val iterator: KeyValueIterator[Windowed[String], ActiveGroup] = getWindowsBetween(streams, fiveMinsAgo.toEpochMilli, now.toEpochMilli)
 
         complete {
-          s"${iterateThenClose[Windowed[String], String](iterator)(windowedRecordAsString)}"
+          s"${iterateThenClose[Windowed[String], ActiveGroup](iterator)(windowedRecordAsString)}"
         }
       }
     } ~
     path("between" / Segment / Segment) { (from, to) =>
       get {
-        val iterator: KeyValueIterator[Windowed[String], String] = getWindowsBetween(streams, from.toLong, to.toLong)
+        val iterator: KeyValueIterator[Windowed[String], ActiveGroup] = getWindowsBetween(streams, from.toLong, to.toLong)
 
         complete {
-          s"${iterateThenClose[Windowed[String], String](iterator)(windowedRecordAsString)}"
+          s"${iterateThenClose[Windowed[String], ActiveGroup](iterator)(windowedRecordAsString)}"
         }
       }
     }
@@ -52,9 +58,9 @@ object ConsumerGroupsEndpoints extends LazyLogging {
   }
 
   private def getWindowsBetween(streams: KafkaStreams, from: Long, to: Long) = {
-    val offsetsMetaWindowStore = streams.store(OFFSETS_AND_META_WINDOW_STORE_NAME, QueryableStoreTypes.windowStore[String, String]())
+    val offsetsMetaWindowStore = streams.store(OFFSETS_AND_META_WINDOW_STORE_NAME, QueryableStoreTypes.windowStore[String, ActiveGroup]())
 
-    val iterator: KeyValueIterator[Windowed[String], String] = offsetsMetaWindowStore.fetchAll(from, to)
+    val iterator: KeyValueIterator[Windowed[String], ActiveGroup] = offsetsMetaWindowStore.fetchAll(from, to)
     iterator
   }
 
@@ -74,29 +80,29 @@ object ConsumerGroupsEndpoints extends LazyLogging {
       .mkString("\n")
   }
 
-  private def windowedRecordAsString(iterator: KeyValueIterator[Windowed[String], String]) = {
+  private def windowedRecordAsString(iterator: KeyValueIterator[Windowed[String], ActiveGroup]) = {
 //    iterator.asScala
 //      .map(kv => s"key: ${kv.key}, window start: ${Instant.ofEpochMilli(kv.key.window().start())}, window end: ${Instant.ofEpochMilli(kv.key.window().end())}, value: ${kv.value}")
 //      .mkString("\n")
-
-    iterator.asScala
-      .toList
-      .map(kv => (kv.key.key(), kv))
-      .groupBy(consumerGroupToWindow => {
-        val consumerGroup = consumerGroupToWindow._1
-        consumerGroup
-      })
-      .map{ groupToGroupAndWindows => {
-          val consumerGroupWindows = groupToGroupAndWindows._2
-            .map(groupAndWindow => {
-              val groupWindow = groupAndWindow._2
-              s"window start: ${Instant.ofEpochMilli(groupWindow.key.window().start())}, window end: ${Instant.ofEpochMilli(groupWindow.key.window().end())}, window value: ${groupWindow.value} \n \n"
-            }).mkString("\n")
-          s"consumergroup: ${groupToGroupAndWindows._1} \n" +
-          s" ${consumerGroupWindows} \n " +
-          s"----------------------------------------------------------------- \n"
-      }
-      }.mkString("\n")
+iterator.asScala.toList.mkString(",\n")
+//    iterator.asScala
+//      .toList
+//      .map(kv => (kv.key.key(), kv))
+//      .groupBy(consumerGroupToWindow => {
+//        val consumerGroup = consumerGroupToWindow._1
+//        consumerGroup
+//      })
+//      .map{ groupToGroupAndWindows => {
+//          val consumerGroupWindows = groupToGroupAndWindows._2
+//            .map(groupAndWindow => {
+//              val groupWindow = groupAndWindow._2
+//              s"window start: ${Instant.ofEpochMilli(groupWindow.key.window().start())}, window end: ${Instant.ofEpochMilli(groupWindow.key.window().end())}, window value: ${groupWindow.value} \n \n"
+//            }).mkString("\n")
+//          s"consumergroup: ${groupToGroupAndWindows._1} \n" +
+//          s" ${consumerGroupWindows} \n " +
+//          s"----------------------------------------------------------------- \n"
+//      }
+//      }.mkString("\n")
   }
 
   private def offsetsAsString(iterator: KeyValueIterator[Array[Byte], Array[Byte]]) = {
