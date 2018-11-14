@@ -31,7 +31,7 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
 
   private def getContentDetails(
                                  iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]
-                               ): Map[ClientDetails, Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]] = {
+                               ): Map[String, Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]] = {
     iterator.map(itr => {
       val consumerPerTopic: Map[Topic, Set[ConsumerInstanceDetails]] = itr.value.clientDetails.members.flatMap(m =>
         m.assignedPartitions.map(_._1).map(_ -> m)
@@ -39,7 +39,11 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
       val window = itr.key
       val clientDetails = itr.value.clientDetails
       (window, clientDetails, consumerPerTopic)
-    }).groupBy({case(_,clientDetails,_) => clientDetails})
+    }).groupBy({case(_,clientDetails,_) => clientDetails.group}).mapValues(s =>
+      s.sortWith({case(a,b) =>
+        a._1.window().start > b._1.window().start
+      }).headOption.toSeq
+      )
   }
 
   private def getWindowsBetween(streams: KafkaStreams, from: Long, to: Long) = {

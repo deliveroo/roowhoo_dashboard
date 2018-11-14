@@ -1,7 +1,7 @@
 @import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
 @import kafka.coordinator.group.ALIAS.Topic
 @import org.apache.kafka.streams.kstream.Windowed
-@(details: Map[ClientDetails, Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]])
+@(details: Map[String, Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]])
 @defining(Seq[String]("rdkafka", "ruby-kafka", "consumer-1")) { riskClientIDS =>
 
 <div class="table-responsive">
@@ -21,31 +21,31 @@
     </thead>
     <tbody>
     @for((c,ds) <- details) {
-    @for(d <- ds) {
-    @if(riskClientIDS.contains(c.clientId)){
-    <tr class="text-light risk">
-      } else if (c.group.startsWith("_") || c.clientId.startsWith("perf") || c.clientId.startsWith("console")){
-    <tr class="text-muted">
+      @for(d <- ds) {
+        @if(riskClientIDS.contains(d._2.clientId)){
+          <tr class="text-light risk">
+          } else if (d._2.group.startsWith("_") || d._2.clientId.startsWith("perf") || d._2.clientId.startsWith("console")){
+        <tr class="text-muted">
       } else{<tr>}
-      <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().start()))</td>
-      <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().end()))</td>
-      <td rowspan=@(d._3.size) >@(c.group)</td>
-      <td rowspan=@(d._3.size) >@(c.clientId)</td>
-      <td>@(d._3.head._1)</td>
-      <td>@(d._3.head._2.size)</td>
-    </tr>
+        <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().start()))</td>
+        <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().end()))</td>
+        <td rowspan=@(d._3.size) >@(d._2.group)</td>
+        <td rowspan=@(d._3.size) >@(d._2.clientId)</td>
+        <td>@(d._3.head._1)</td>
+        <td>@(d._3.head._2.size)</td>
+      </tr>
 
-    @for(consumingDetails <- d._3.tail) {
-    @if(riskClientIDS.contains(c.clientId)){
-    <tr class="text-light risk">
-      } else if (c.group.startsWith("_") || c.clientId.startsWith("perf") || c.clientId.startsWith("console")){
-    <tr class="text-muted">
-      } else{<tr>}
-      <td>@consumingDetails._1</td>
-      <td>@consumingDetails._2.size</td>
-    </tr>
-    }
-    }
+        @for(consumingDetails <- d._3.tail) {
+          @if(riskClientIDS.contains(d._2.clientId)){
+            <tr class="text-light risk">
+            } else if (d._2.group.startsWith("_") || d._2.clientId.startsWith("perf") || d._2.clientId.startsWith("console")){
+          <tr class="text-muted">
+        } else{<tr>}
+          <td>@consumingDetails._1</td>
+          <td>@consumingDetails._2.size</td>
+        </tr>
+        }
+      }
 
     }
     </tbody>

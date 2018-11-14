@@ -1,7 +1,7 @@
 @import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
 @import kafka.coordinator.group.ALIAS.Topic
 @import org.apache.kafka.streams.kstream.Windowed
-@(details: Map[ClientDetails, Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]])
+@(details: Map[String, Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]])
 
 @main("Kafka Active Consumers") {
 
