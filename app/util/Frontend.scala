@@ -12,7 +12,7 @@ object Frontend {
       riskClientIds.exists(clientId.startsWith) ||
       clientId.matches("consumer-\\d+")
 
-  val internalStreamTopic = "KSTREAM"
+  val internalStreamTopicKeyWords: Seq[String] = Seq("KSTREAM", "KSTORE", "-changelog", "-repartition")
   def colorRow(clientDetails: ClientDetails): String  = {
     if(isRisky(clientDetails.clientId)) "text-light risk"
     else {
@@ -26,7 +26,7 @@ object Frontend {
 
   def activeTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
     topicsFromActiveGroups(activeGroups)
-      .filterNot(topic=>topic.startsWith("_") || topic.contains(internalStreamTopic))
+      .filterNot(topic=>internalTopic(topic) || streamTopic(topic))
 
 
   private def topicsFromActiveGroups(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] = {
@@ -35,10 +35,16 @@ object Frontend {
   }
 
   def internalStreamTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
-    topicsFromActiveGroups(activeGroups).filter(_.contains(internalStreamTopic))
+    topicsFromActiveGroups(activeGroups).filter(streamTopic)
 
   def clientsWithRiskClientIds(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Seq[ClientDetails] =
     activeGroups.filter(ag =>
       isRisky(ag._2.clientId)
     ).map(_._2)
+
+
+  def internalTopic(name: String): Boolean = name.startsWith("_") && !streamTopic(name)
+
+  def streamTopic(name: String): Boolean =
+    internalStreamTopicKeyWords.exists(name.startsWith)
 }
