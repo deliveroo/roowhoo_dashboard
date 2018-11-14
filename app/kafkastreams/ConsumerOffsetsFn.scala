@@ -1,10 +1,11 @@
-package com.deliveroo.kafka.consumer.offsets.viewer
+package kafkastreams
 
 import java.nio.ByteBuffer
 import java.time.Instant
 
 import com.typesafe.scalalogging.LazyLogging
 import kafka.coordinator.group._
+import kafka.coordinator.group.{ClientDetails, ConsumerOffsetDetails}
 import org.apache.kafka.streams.kstream.Reducer
 
 object ConsumerOffsetsFn  extends LazyLogging  {

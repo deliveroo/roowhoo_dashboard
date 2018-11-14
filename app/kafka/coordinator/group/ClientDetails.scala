@@ -11,9 +11,10 @@ import scala.collection.JavaConverters._
 object ALIAS {
   type Topic= String
   type PartitionNumber = Int
+  type ConsumerInstanceId = String
 }
 final case class ConsumerInstanceDetails(
-                                   id: String,
+                                   id: ALIAS.ConsumerInstanceId,
                                    host: String,
                                    rebalanceTimeoutMs: Long,
                                    sessionTimeoutMs:Long,

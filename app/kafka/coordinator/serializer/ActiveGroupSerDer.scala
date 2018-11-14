@@ -1,8 +1,8 @@
-package com.deliveroo.kafka.serializer
+package kafka.coordinator.serializer
 
 import java.util
 
-import kafka.coordinator.group.{ActiveGroup}
+import kafka.coordinator.group.ActiveGroup
 import org.apache.kafka.common.errors.SerializationException
 import org.apache.kafka.common.serialization.{Deserializer, Serializer}
 import play.api.libs.json.Json

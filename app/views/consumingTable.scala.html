@@ -1,0 +1,51 @@
+@import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
+@import kafka.coordinator.group.ALIAS.Topic
+@import org.apache.kafka.streams.kstream.Windowed
+@import org.apache.kafka.streams.KeyValue
+@(details: Seq[KeyValue[Windowed[String], (ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]])
+@defining(Seq[String]("rdkafka", "ruby-kafka", "consumer-1")) { riskClientIDS =>
+
+<div class="table-responsive">
+  <table class="table table-bordered">
+    <thead class="thead-dark">
+    <tr>
+      <th rowspan="2">#Start</th>
+      <th rowspan="2">#End</th>
+      <th rowspan="2">Group ID</th>
+      <th rowspan="2">Client</th>
+      <th colspan="2" >Consuming Details</th>
+    </tr>
+    <tr>
+      <th>Topics</th>
+      <th>#Consumers</th>
+    </tr>
+    </thead>
+    <tbody>
+    @for(d <- details) {
+    @if(riskClientIDS.contains(d.value._1.clientId)){
+    <tr class="text-light risk">
+    } else if (d.value._1.group.startsWith("_") || d.value._1.clientId.startsWith("perf") || d.value._1.clientId.startsWith("console")){
+      <tr class="text-muted">
+    } else{<tr>}
+      <td rowspan=@(d.value._2.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d.key.window().start()))</td>
+      <td rowspan=@(d.value._2.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d.key.window().end()))</td>
+      <td rowspan=@(d.value._2.size) >@d.value._1.group</td>
+      <td rowspan=@(d.value._2.size) >@d.value._1.clientId</td>
+      <td>@d.value._2.head._1</td>
+      <td>@d.value._2.head._2.size</td>
+    </tr>
+    @for(consumingDetails <- d.value._2.tail) {
+    @if(riskClientIDS.contains(d.value._1.clientId)){
+    <tr class="text-light risk">
+      } else if (d.value._1.group.startsWith("_") || d.value._1.clientId.startsWith("perf") || d.value._1.clientId.startsWith("console")){
+    <tr class="text-muted">
+      } else{<tr>}
+      <td>@consumingDetails._1</td>
+      <td>@consumingDetails._2.size</td>
+    </tr>
+    }
+    }
+    </tbody>
+  </table>
+</div>
+}

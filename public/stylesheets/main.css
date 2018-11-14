@@ -1,0 +1,17 @@
+.thead-dark {
+    background-color: #222222;
+    border-color: #080808;
+    color: #ffff;
+}
+
+.risk {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+.text-light {
+    color: #ffff;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}

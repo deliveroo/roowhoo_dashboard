@@ -1,4 +1,4 @@
-package com.deliveroo.kafka.serializer
+package kafka.coordinator.serializer
 
 import java.util
 

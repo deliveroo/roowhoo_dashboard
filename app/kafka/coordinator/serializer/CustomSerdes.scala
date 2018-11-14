@@ -1,4 +1,4 @@
-package com.deliveroo.kafka.serializer
+package kafka.coordinator.serializer
 
 import com.lightbend.kafka.scala.streams.StatelessScalaSerde
 import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
