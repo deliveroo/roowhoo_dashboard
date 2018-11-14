@@ -29,10 +29,10 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
 }
 
 object OffsetsViewer extends LazyLogging  {
+  import ConsumerOffsetsFn._
+
   val offsetTopic:String = sys.env.get("INPUT_TOPIC").get
 
-  val OFFSETS_STORE_NAME = "offsets-state-store"
-  val GROUP_TOPIC_MAX_PARTITION_STORE_NAME = "group-topic-maxpartition"
   val OFFSETS_AND_META_WINDOW_STORE_NAME = "active-groups"
 
   def streamProperties(broker:String) = {
@@ -55,72 +55,6 @@ object OffsetsViewer extends LazyLogging  {
 
   implicit val system: ActorSystem = ActorSystem("OffsetsViewer", ConfigFactory.load())
   implicit val _: ActorMaterializer = ActorMaterializer()
-
-  private val isOffset: Predicate[Array[Byte], Array[Byte]] = (key, _) => {
-    GroupMetadataManager.readMessageKey(ByteBuffer.wrap(key)) match {
-      case _: OffsetKey => true
-      case _: GroupMetadataKey => false
-    }
-  }
-
-  private val isGroupMetadata: Predicate[Array[Byte], Array[Byte]] = (key, value) => {
-    !isOffset.test(key, value)
-  }
-
-  private val isCommittedLastTenMins: Predicate[String, String] = (_,v) => {
-    logger.info(s"####v: ${v}")
-    val consumerGroupData = v.split("\\|")
-    if (consumerGroupData.length <= 2) {
-      false
-    } else {
-      val commitTs = Instant.ofEpochMilli(consumerGroupData(2).toLong)
-      val now = Instant.now()
-
-      val tenMinutesAgo = now.minusSeconds(180)
-
-      if(commitTs.compareTo(tenMinutesAgo) < 1) false else true
-    }
-  }
-
-  private val offsetConsumerGroupKey: KeyValueMapper[Array[Byte], Array[Byte], KeyValue[String,String]] = (k: Array[Byte], v: Array[Byte]) => {
-    val offsetKey = GroupMetadataManager.readMessageKey(ByteBuffer.wrap(k)).asInstanceOf[OffsetKey]
-
-    val (commitTimestamp, expireTimestamp) = Option(v).map { case (offsetValue) =>
-      val messageValue = GroupMetadataManager.readOffsetMessageValue(ByteBuffer.wrap(offsetValue))
-      (messageValue.commitTimestamp.toString, messageValue.expireTimestamp.toString)
-    } getOrElse{
-      logger.info(s"###empty val ${v} for key: ${offsetKey}")
-      ("","")
-    }
-
-    KeyValue.pair(offsetKey.key.group, s"${offsetKey.key.topicPartition.topic()}|${offsetKey.key.topicPartition.partition()}|${commitTimestamp}|${expireTimestamp}")
-  }
-
-  private val groupMetadataConsumerGroupKey: KeyValueMapper[Array[Byte], Array[Byte], KeyValue[String, Array[Byte]]] = (k: Array[Byte], v: Array[Byte]) => {
-    KeyValue.pair(
-      GroupMetadataManager.readMessageKey(ByteBuffer.wrap(k)).asInstanceOf[GroupMetadataKey].toString, v)
-  }
-
-  private val groupMetadataAggregateInit: Initializer[Array[Byte]] = () => Array[Byte]()
-  private val latestGroupMeta: Aggregator[String, Array[Byte], Array[Byte]] = (consumerGroupName:String, v: Array[Byte], agg:Array[Byte]) => {
-    if(agg.length > 0) {
-      val currentLatest = GroupMetadataManager.readGroupMessageValue(consumerGroupName, ByteBuffer.wrap(agg))
-      val current = GroupMetadataManager.readGroupMessageValue(consumerGroupName, ByteBuffer.wrap(v))
-      if (current.generationId > currentLatest.generationId) v else agg
-    } else {
-      v
-    }
-  }
-
-  private val offsetCommitToMetadataValueJoiner: ValueJoiner[String,Array[Byte],String] = (offsetCommit:String, groupMetadata:Array[Byte]) => {
-    val offsetCommitFields = offsetCommit.split("\\|")
-    val consumerGroup = offsetCommitFields(0)
-    s"${offsetCommit}|${GroupMetadataManager.readGroupMessageValue(consumerGroup, ByteBuffer.wrap(groupMetadata)).toString}"
-  }
-
-  private val offsetCommitToMetaValueReducer: Reducer[String] = (_:String, v2:String) => {
-    v2
-  }
 
   def main(args: Array[String]):Unit = {
     val conf = new Conf(args)
@@ -166,6 +100,75 @@ object OffsetsViewer extends LazyLogging  {
       streams.close()
     }
 
+  }
+
+}
+
+object ConsumerOffsetsFn  extends LazyLogging  {
+  val isOffset: Predicate[Array[Byte], Array[Byte]] = (key, _) => {
+    GroupMetadataManager.readMessageKey(ByteBuffer.wrap(key)) match {
+      case _: OffsetKey => true
+      case _: GroupMetadataKey => false
+    }
+  }
+
+  val isGroupMetadata: Predicate[Array[Byte], Array[Byte]] = (key, value) => {
+    !isOffset.test(key, value)
+  }
+
+  val isCommittedLastTenMins: Predicate[String, String] = (_,v) => {
+    logger.info(s"####v: ${v}")
+    val consumerGroupData = v.split("\\|")
+    if (consumerGroupData.length <= 2) {
+      false
+    } else {
+      val commitTs = Instant.ofEpochMilli(consumerGroupData(2).toLong)
+      val now = Instant.now()
+
+      val tenMinutesAgo = now.minusSeconds(180)
+
+      if(commitTs.compareTo(tenMinutesAgo) < 1) false else true
+    }
+  }
+
+  val offsetConsumerGroupKey: KeyValueMapper[Array[Byte], Array[Byte], KeyValue[String,String]] = (k: Array[Byte], v: Array[Byte]) => {
+    val offsetKey = GroupMetadataManager.readMessageKey(ByteBuffer.wrap(k)).asInstanceOf[OffsetKey]
+
+    val (commitTimestamp, expireTimestamp) = Option(v).map { case (offsetValue) =>
+      val messageValue = GroupMetadataManager.readOffsetMessageValue(ByteBuffer.wrap(offsetValue))
+      (messageValue.commitTimestamp.toString, messageValue.expireTimestamp.toString)
+    } getOrElse{
+      logger.info(s"###empty val ${v} for key: ${offsetKey}")
+      ("","")
+    }
+
+    KeyValue.pair(offsetKey.key.group, s"${offsetKey.key.topicPartition.topic()}|${offsetKey.key.topicPartition.partition()}|${commitTimestamp}|${expireTimestamp}")
+  }
+
+  val groupMetadataConsumerGroupKey: KeyValueMapper[Array[Byte], Array[Byte], KeyValue[String, Array[Byte]]] = (k: Array[Byte], v: Array[Byte]) => {
+    KeyValue.pair(
+      GroupMetadataManager.readMessageKey(ByteBuffer.wrap(k)).asInstanceOf[GroupMetadataKey].toString, v)
+  }
+
+  val groupMetadataAggregateInit: Initializer[Array[Byte]] = () => Array[Byte]()
+  val latestGroupMeta: Aggregator[String, Array[Byte], Array[Byte]] = (consumerGroupName:String, v: Array[Byte], agg:Array[Byte]) => {
+    if(agg.length > 0) {
+      val currentLatest = GroupMetadataManager.readGroupMessageValue(consumerGroupName, ByteBuffer.wrap(agg))
+      val current = GroupMetadataManager.readGroupMessageValue(consumerGroupName, ByteBuffer.wrap(v))
+      if (current.generationId > currentLatest.generationId) v else agg
+    } else {
+      v
+    }
+  }
+
+  val offsetCommitToMetadataValueJoiner: ValueJoiner[String,Array[Byte],String] = (offsetCommit:String, groupMetadata:Array[Byte]) => {
+    val offsetCommitFields = offsetCommit.split("\\|")
+    val consumerGroup = offsetCommitFields(0)
+    s"${offsetCommit}|${GroupMetadataManager.readGroupMessageValue(consumerGroup, ByteBuffer.wrap(groupMetadata)).toString}"
+  }
+
+  val offsetCommitToMetaValueReducer: Reducer[String] = (_:String, v2:String) => {
+    v2
   }
 
 }

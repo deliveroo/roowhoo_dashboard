@@ -5,47 +5,18 @@ import java.time.Instant
 
 import akka.http.scaladsl.server.Directives.{complete, get, path, _}
 import akka.http.scaladsl.server.Route
-import com.deliveroo.kafka.consumer.offsets.viewer.OffsetsViewer.OFFSETS_STORE_NAME
-import com.deliveroo.kafka.consumer.offsets.viewer.OffsetsViewer.GROUP_TOPIC_MAX_PARTITION_STORE_NAME
 import com.deliveroo.kafka.consumer.offsets.viewer.OffsetsViewer.OFFSETS_AND_META_WINDOW_STORE_NAME
 import com.typesafe.scalalogging.LazyLogging
 import kafka.coordinator.group.{GroupMetadataKey, GroupMetadataManager, OffsetKey}
-import org.apache.kafka.streams.{KafkaStreams, KeyValue}
+import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.kstream.Windowed
-import org.apache.kafka.streams.state.{KeyValueIterator, QueryableStoreTypes, ReadOnlyKeyValueStore}
+import org.apache.kafka.streams.state.{KeyValueIterator, QueryableStoreTypes}
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable
 
 object OffsetsEndpoints extends LazyLogging {
 
   def routesFor(streams: KafkaStreams): Route = {
-    path("offsets") {
-      get {
-        val offsetsStore: ReadOnlyKeyValueStore[Array[Byte], Array[Byte]] = streams.store(OFFSETS_STORE_NAME, QueryableStoreTypes.keyValueStore[Array[Byte], Array[Byte]]())
-
-        logger.info(s"there are ${offsetsStore.approximateNumEntries()} entries in the offset store")
-
-        val iterator: KeyValueIterator[Array[Byte], Array[Byte]] = offsetsStore.all()
-
-        complete{
-          s"${iterateThenClose[Array[Byte], Array[Byte]](iterator)(offsetsAsString)}"
-        }
-      }
-    } ~
-    path("group-topic-maxpartition") {
-      get {
-        val groupTopicMaxPartitionStore: ReadOnlyKeyValueStore[String, String] = streams.store(GROUP_TOPIC_MAX_PARTITION_STORE_NAME, QueryableStoreTypes.keyValueStore[String, String]())
-
-        logger.info(s"there are ${groupTopicMaxPartitionStore.approximateNumEntries()} entries in the groupTopicMaxPartitionStore store")
-
-        val iterator: KeyValueIterator[String, String] = groupTopicMaxPartitionStore.all()
-
-        complete {
-          s"${iterateThenClose[String, String](iterator)(recordAsString)}"
-        }
-      }
-    } ~
     path("all") {
       get {
         val offsetsMetaWindowStore = streams.store(OFFSETS_AND_META_WINDOW_STORE_NAME, QueryableStoreTypes.windowStore[String, String]())
