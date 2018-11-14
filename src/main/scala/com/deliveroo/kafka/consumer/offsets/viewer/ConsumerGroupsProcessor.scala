@@ -28,10 +28,12 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   verify()
 }
 
-object OffsetsViewer extends LazyLogging  {
+object ConsumerGroupsProcessor extends LazyLogging  {
   import ConsumerOffsetsFn._
 
   val offsetTopic:String = sys.env.get("INPUT_TOPIC").get
+  val password:String = sys.env.get("PASSWORD").get
+  val userName:String = sys.env.get("USERNAME").get
 
   val OFFSETS_AND_META_WINDOW_STORE_NAME = "active-groups"
 
@@ -46,7 +48,7 @@ object OffsetsViewer extends LazyLogging  {
     props.put(StreamsConfig.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
     props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
     props.put(SASL_JAAS_CONFIG, "org.apache.kafka.common.security.scram.ScramLoginModule required " +
-      s"""username="<set-me>"  password="<set-me>";""")
+      s"""username="${userName}"  password="${password}";""")
 
     props.put(StreamsConfig.RETRIES_CONFIG, "5")
     props.put(StreamsConfig.RETRY_BACKOFF_MS_CONFIG, "300")
@@ -92,7 +94,7 @@ object OffsetsViewer extends LazyLogging  {
     val streams: KafkaStreams = new KafkaStreams(builder.build(), streamProperties(conf.broker()))
     streams.start()
 
-    val routes: Route = OffsetsEndpoints.routesFor(streams)
+    val routes: Route = ConsumerGroupsEndpoints.routesFor(streams)
     val serverBinding: Http.ServerBinding = Await.result(Http().bindAndHandle(routes, "0.0.0.0", 8082), 60.seconds)
 
     sys.addShutdownHook{

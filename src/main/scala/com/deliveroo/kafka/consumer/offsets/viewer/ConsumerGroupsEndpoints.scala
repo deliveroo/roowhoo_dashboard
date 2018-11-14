@@ -5,7 +5,7 @@ import java.time.Instant
 
 import akka.http.scaladsl.server.Directives.{complete, get, path, _}
 import akka.http.scaladsl.server.Route
-import com.deliveroo.kafka.consumer.offsets.viewer.OffsetsViewer.OFFSETS_AND_META_WINDOW_STORE_NAME
+import com.deliveroo.kafka.consumer.offsets.viewer.ConsumerGroupsProcessor.OFFSETS_AND_META_WINDOW_STORE_NAME
 import com.typesafe.scalalogging.LazyLogging
 import kafka.coordinator.group.{GroupMetadataKey, GroupMetadataManager, OffsetKey}
 import org.apache.kafka.streams.KafkaStreams
@@ -14,7 +14,7 @@ import org.apache.kafka.streams.state.{KeyValueIterator, QueryableStoreTypes}
 
 import scala.collection.JavaConverters._
 
-object OffsetsEndpoints extends LazyLogging {
+object ConsumerGroupsEndpoints extends LazyLogging {
 
   def routesFor(streams: KafkaStreams): Route = {
     path("all") {
