@@ -8,6 +8,9 @@
     background-color: #dc3545;
     border-color: #dc3545;
 }
+.risk a {
+    color: #ffff !important;
+}
 .text-light {
     color: #ffff !important;
 }
@@ -90,3 +93,4 @@
     border-radius: 0px !important;
     margin-bottom: 0px !important;
 }
+

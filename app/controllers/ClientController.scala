@@ -35,13 +35,23 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
                                  iterator: Seq[KeyValue[Windowed[String], ActiveGroup]],
                                  clientId: String
                                ): Map[GroupId, Map[Topic, Set[ConsumerInstanceDetails]]] = {
-    iterator
+    KafkaUtils.getLatestStores(iterator)
       .filter(_.value.clientDetails.clientId == clientId)
       .map { itr =>
         val groupedByTopic = KafkaUtils.groupPerTopic(itr.value.clientDetails)
         (itr.value.consumerOffsets.group, groupedByTopic)
       }
-      .groupBy(_._1).mapValues(v => v.map(_._2).flatten.toMap)
+      .foldLeft(Map.empty[GroupId, Map[Topic, Set[ConsumerInstanceDetails]]])( (acc, v) => acc.get(v._1) match {
+        case Some(topicDetails: Map[Topic, Set[ConsumerInstanceDetails]]) =>
+          val topicToDetailses = topicDetails.foldLeft(Map.empty[Topic, Set[ConsumerInstanceDetails]])( (tAcc, topic) => tAcc.get(topic._1) match  {
+            case None => tAcc + topic
+            case Some(t) =>
+              val detailses = t ++ topic._2
+              tAcc + (topic._1 -> detailses)
+          })
+          acc + (v._1 -> topicToDetailses)
+        case None => acc + (v._1 -> v._2)
+      })
   }
 
   private def getAcls(
@@ -75,7 +85,8 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
       Ok(views.html.client(details, clientId, aclsDetails, adminAcls))
 
     } else {
-      Ok("Stream isn't ready")
+      Ok(views.html.loading())
+
     }
 
   }

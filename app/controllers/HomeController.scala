@@ -63,9 +63,8 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
 
       val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
       Ok(views.html.index(getContentDetails(iterator)))
-
     } else {
-      Ok(views.html.index(getContentDetails(Seq[KeyValue[Windowed[String],ActiveGroup]]())))
+      Ok(views.html.loading())
     }
 
   }
@@ -86,7 +85,8 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
         getWindowsBetween(kafka.stream, fiveMinsAgo.toEpochMilli, now.toEpochMilli).asScala.toList
       Ok(views.html.between(getContentDetails(iterator), fiveMinsAgo.toEpochMilli, now.toEpochMilli))
 
-    } else InternalServerError("STREAM ISN'T RUNNING NOW")
+    } else       Ok(views.html.loading())
+
 
   }
 
@@ -104,7 +104,7 @@ class HomeController @Inject()(cc: ControllerComponents, kafka: KafkaTask) exten
         getWindowsBetween(kafka.stream, from, to).asScala.toList
       Ok(views.html.between(getContentDetails(iterator), from, to))
 
-    } else InternalServerError("STREAM ISN'T RUNNING NOW")
+    } else       Ok(views.html.loading())
 
   }
 

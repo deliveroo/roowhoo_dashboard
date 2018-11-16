@@ -60,13 +60,14 @@
       <tr>
           <td> @i.id </td>
           <td> @i.host </td>
-          <td> @i.assignedPartitions.filter(_._1 == gd._2.head._1).map(_._2).mkString(", ") </td>
+          <td> @i.assignedPartitions.filter(_._1 == t._1).map(_._2).toSeq.sortWith(_ < _).mkString(", ") </td>
       </tr>
       }
     }
     }
     </tbody>
   </table>
+
 </div>
 
 }

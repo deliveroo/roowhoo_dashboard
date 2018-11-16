@@ -27,7 +27,9 @@
         <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().start()))</td>
         <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().end()))</td>
         <td rowspan=@(d._3.size) >@(d._2.group)</td>
-        <td rowspan=@(d._3.size) >@(d._2.clientId)</td>
+        <td rowspan=@(d._3.size) >
+          <a href=@("/client/" + d._2.clientId)> @(d._2.clientId) </a>
+        </td>
         <td>@(d._3.head._1)</td>
         <td>@(d._3.head._2.size)</td>
       </tr>

@@ -1,13 +1,29 @@
 package util
 
 import kafka.coordinator.group.ALIAS.{GroupId, Topic}
-import kafka.coordinator.group.{ClientDetails, ConsumerInstanceDetails}
+import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerInstanceDetails}
 import kafka.security.auth.SimpleAclAuthorizer
+
 import scala.collection.JavaConverters._
 import java.net.InetAddress
 
+import org.apache.kafka.streams.KeyValue
+import org.apache.kafka.streams.kstream.Windowed
+
 object KafkaUtils {
   type UserName = String
+
+  def getLatestStores(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]):
+  Seq[KeyValue[Windowed[String], ActiveGroup]] = {
+    iterator.groupBy({
+        case(keyValuePair) => keyValuePair.value.clientDetails.group}).mapValues(s =>
+          s.sortWith({case(a,b) =>
+            a.key.window().start > b.key.window().start
+          }
+      ).headOption.toSeq
+    ).values.toSeq.flatten
+  }
+
 
   def groupPerTopic(clientDetails: ClientDetails):  Map[Topic, Set[ConsumerInstanceDetails]] = {
     clientDetails.members.flatMap(m =>
