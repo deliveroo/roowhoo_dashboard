@@ -1,21 +1,13 @@
-package kafka.coordinator.group
-
+package models
 import java.nio.ByteBuffer
 
+import kafka.coordinator.group.GroupMetadataManager
 import org.apache.kafka.clients.consumer.internals.ConsumerProtocol
 import org.apache.kafka.common.TopicPartition
 import play.api.libs.json.{Json, OFormat}
 
 import scala.collection.JavaConverters._
 
-final case class ConsumerInstanceDetails(
-                                   id: ConsumerInstanceId,
-                                   host: String,
-                                   rebalanceTimeoutMs: Long,
-                                   sessionTimeoutMs:Long,
-                                   protocolType:Set[String],
-                                   protocols:Set[String],
-                                   assignedPartitions: Set[(Topic, PartitionNumber)])
 final case class ClientDetails(
                                 clientId: ClientId,
                                 members: Set[ConsumerInstanceDetails],

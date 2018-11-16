@@ -1,7 +1,6 @@
-@import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
-@import kafka.coordinator.group.Topic
+@import models._
 @import org.apache.kafka.streams.kstream.Windowed
-@(details: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])])
+@(details: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])])
 
 @main("RooWhoo - Latest Active Consumers ") {
 

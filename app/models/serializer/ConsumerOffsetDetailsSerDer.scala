@@ -1,8 +1,8 @@
-package kafka.coordinator.serializer
+package models.serializer
 
 import java.util
 
-import kafka.coordinator.group.ConsumerOffsetDetails
+import models.ConsumerOffsetDetails
 import org.apache.kafka.common.errors.SerializationException
 import org.apache.kafka.common.serialization.{Deserializer, Serializer}
 import play.api.libs.json.Json

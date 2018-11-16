@@ -2,7 +2,7 @@ package util
 
 import java.util.Properties
 
-import kafka.coordinator.serializer.ClientDetailsSerde
+import models.serializer._
 import org.apache.kafka.common.config.SaslConfigs.SASL_JAAS_CONFIG
 import org.apache.kafka.common.config.{SaslConfigs, TopicConfig}
 import org.apache.kafka.common.serialization.Serdes

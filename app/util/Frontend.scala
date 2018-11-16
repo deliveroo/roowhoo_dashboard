@@ -1,7 +1,6 @@
 package util
 
-import kafka.coordinator.group.{ClientId, Topic}
-import kafka.coordinator.group.{ClientDetails, ConsumerInstanceDetails}
+import models._
 import org.apache.kafka.streams.kstream.Windowed
 
 object Frontend {
@@ -10,8 +9,8 @@ object Frontend {
 
   def isRisky(clientId: ClientId): Boolean =
     riskClientIds.contains(clientId) ||
-    riskClientIds.exists(clientId.startsWith(_)) ||
-    clientId.matches("consumer-\\d+")
+      riskClientIds.exists(clientId.startsWith) ||
+      clientId.matches("consumer-\\d+")
 
   val internalStreamTopic = "KSTREAM"
   def colorRow(clientDetails: ClientDetails): String  = {
@@ -25,22 +24,21 @@ object Frontend {
     }
   }
 
-  def activeTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]): Set[Topic] =
+  def activeTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
     topicsFromActiveGroups(activeGroups)
       .filterNot(topic=>topic.startsWith("_") || topic.contains(internalStreamTopic))
 
 
-  private def topicsFromActiveGroups(activeGroups: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]): Set[Topic] = {
+  private def topicsFromActiveGroups(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] = {
     activeGroups
       .flatMap(_._3.keys).toSet
   }
 
-  def internalStreamTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]): Set[Topic] =
+  def internalStreamTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
     topicsFromActiveGroups(activeGroups).filter(_.contains(internalStreamTopic))
 
-  def clientsWithRiskClientIds(activeGroups: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])]): Seq[ClientDetails] =
+  def clientsWithRiskClientIds(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Seq[ClientDetails] =
     activeGroups.filter(ag =>
       isRisky(ag._2.clientId)
     ).map(_._2)
-
 }

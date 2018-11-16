@@ -3,8 +3,7 @@ package services.stream.GroupMetadataTopic
 import com.lightbend.kafka.scala.streams.DefaultSerdes._
 import com.lightbend.kafka.scala.streams.ImplicitConversions._
 import com.lightbend.kafka.scala.streams.{KStreamS, KTableS, StreamsBuilderS}
-import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
-import kafka.coordinator.serializer.CustomSerdes
+import models.serializer.CustomSerdes
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes
 import org.apache.kafka.streams._
@@ -13,11 +12,12 @@ import org.apache.kafka.streams.state.WindowStore
 import play.api.Logger
 import util.StreamConfig
 import GroupMetadataHelper._
+import models.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
 import org.apache.kafka.common.internals.Topic
 
 
 object StreamGroupMetadata  {
-  val GROUP_METADATA_TOPIC_NAME = Topic.GROUP_METADATA_TOPIC_NAME //__consumer_offsets
+  val GROUP_METADATA_TOPIC_NAME: String = Topic.GROUP_METADATA_TOPIC_NAME //__consumer_offsets
 
   def stream(config: StreamConfig):KafkaStreams = {
     val builder = new StreamsBuilderS()

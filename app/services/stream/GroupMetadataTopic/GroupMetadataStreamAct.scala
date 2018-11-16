@@ -9,9 +9,9 @@ import util.StreamConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class KafkaStreamsAct extends SimpleModule(bind[KafkaTask].toSelf.eagerly())
+class GroupMetadataStreamAct extends SimpleModule(bind[GroupMetadataStreamTask].toSelf.eagerly())
 
-class KafkaTask @Inject()(actorSystem: ActorSystem,playConfig: Configuration)(lifecycle: ApplicationLifecycle)(implicit executionContext: ExecutionContext) {
+class GroupMetadataStreamTask @Inject()(actorSystem: ActorSystem, playConfig: Configuration)(lifecycle: ApplicationLifecycle)(implicit executionContext: ExecutionContext) {
 
   val stream: KafkaStreams  = StreamGroupMetadata.stream(StreamConfig(playConfig))
 

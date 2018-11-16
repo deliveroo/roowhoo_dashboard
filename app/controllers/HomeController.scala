@@ -3,7 +3,7 @@ package controllers
 import java.time.Instant
 
 import javax.inject._
-import kafka.coordinator.group.ActiveGroup
+import models.ActiveGroup
 import org.apache.kafka.streams.KafkaStreams.State
 import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.QueryableStoreTypes
@@ -11,14 +11,13 @@ import org.apache.kafka.streams.{KafkaStreams, KeyValue}
 import play.api.Configuration
 import play.api.mvc._
 import util._
-import services.stream.GroupMetadataTopic.KafkaTask
-
+import services.stream.GroupMetadataTopic.GroupMetadataStreamTask
 import scala.collection.JavaConverters._
 
 @Singleton
 class HomeController @Inject()(playConfig: Configuration,
                                cc: ControllerComponents,
-                               kafka: KafkaTask) extends AbstractController(cc) {
+                               kafka: GroupMetadataStreamTask) extends AbstractController(cc) {
 
   private val STORENAME =
     StreamConfig.OFFSETS_AND_META_WINDOW_STORE_NAME(StreamConfig(playConfig))

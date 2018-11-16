@@ -1,13 +1,12 @@
-@import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
-@import kafka.coordinator.group.Topic
+@import models._
 @import org.apache.kafka.streams.kstream.Windowed
 @import org.apache.kafka.streams.KeyValue
-@(details: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])], from:Long, to:Long)
+@(details: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])], from:Long, to:Long)
 
 @main("Kafka Active Consumers") {
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-  <h1 class="h2">Active Consumers From @("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(from)) to @("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(to))</h1>
+    <h1 class="h2">Active Consumers From @("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(from)) to @("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(to))</h1>
 </div>
 @consumingTable(details)
 

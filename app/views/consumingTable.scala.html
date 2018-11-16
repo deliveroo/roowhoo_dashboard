@@ -1,46 +1,45 @@
-@import kafka.coordinator.group.{ClientDetails,ConsumerInstanceDetails}
-@import kafka.coordinator.group.Topic
+@import models._
 @import org.apache.kafka.streams.kstream.Windowed
 @import util.Frontend
-@(details: Seq[(Windowed[String], ClientDetails, Map[Topic, Set[ConsumerInstanceDetails]])])
+@(details: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])])
 
 <div class="table-responsive">
-  <table class="table table-bordered">
-    <thead class="thead-dark">
-    <tr>
-      <th rowspan="2">#Start</th>
-      <th rowspan="2">#End</th>
-      <th rowspan="2">Group ID</th>
-      <th rowspan="2">Client</th>
-      <th colspan="2">Consuming Details</th>
-    </tr>
-    <tr>
-      <th>Topics</th>
-      <th>#Consumers</th>
-    </tr>
-    </thead>
-    <tbody>
-    @for(d <- details) {
-    <tr class="@Frontend.colorRow(d._2)">
-      <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().start()))</td>
-      <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().end()))</td>
-      <td rowspan=@(d._3.size) >@(d._2.group)</td>
-      <td rowspan=@(d._3.size) >
-        <a target="_blank" href=@("/client/" + d._2.clientId)> @(d._2.clientId) </a>
-      </td>
-      <td>@(d._3.head._1)</td>
-      <td>@(d._3.head._2.size)</td>
-    </tr>
+    <table class="table table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th rowspan="2">#Start</th>
+            <th rowspan="2">#End</th>
+            <th rowspan="2">Group ID</th>
+            <th rowspan="2">Client</th>
+            <th colspan="2">Consuming Details</th>
+        </tr>
+        <tr>
+            <th>Topics</th>
+            <th>#Consumers</th>
+        </tr>
+        </thead>
+        <tbody>
+        @for(d <- details) {
+        <tr class="@Frontend.colorRow(d._2)">
+            <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().start()))</td>
+            <td rowspan=@(d._3.size) >@("%1$tH:%1$tM:%1$tS.%1$tL %1$tY.%1$tm.%1$td".format(d._1.window().end()))</td>
+            <td rowspan=@(d._3.size) >@(d._2.group)</td>
+            <td rowspan=@(d._3.size) >
+                <a target="_blank" href=@("/client/" + d._2.clientId)> @(d._2.clientId) </a>
+            </td>
+            <td>@(d._3.head._1)</td>
+            <td>@(d._3.head._2.size)</td>
+        </tr>
 
-    @for(consumingDetails <- d._3.tail) {
-    <tr class="@Frontend.colorRow(d._2)">
-      <td>@consumingDetails._1</td>
-      <td>@consumingDetails._2.size</td>
-    </tr>
+        @for(consumingDetails <- d._3.tail) {
+        <tr class="@Frontend.colorRow(d._2)">
+            <td>@consumingDetails._1</td>
+            <td>@consumingDetails._2.size</td>
+        </tr>
 
-    }
-    }
+        }
+        }
 
-    </tbody>
-  </table>
+        </tbody>
+    </table>
 </div>

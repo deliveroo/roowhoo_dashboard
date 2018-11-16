@@ -1,10 +1,11 @@
-package kafka.coordinator.group
+package models
 
 import kafka.common.OffsetAndMetadata
+import kafka.coordinator.group.OffsetKey
 import play.api.libs.json.{Json, OFormat}
 
 final case class ConsumerOffsetDetails(
-                                        topic: Topic,
+                                        topic: TopicName,
                                         partition: Int,
                                         group: GroupId,
                                         version: Int,

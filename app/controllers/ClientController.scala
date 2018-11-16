@@ -3,22 +3,21 @@ package controllers
 import java.net.URLDecoder
 
 import javax.inject._
-import kafka.coordinator.group.{ActiveGroup, ConsumerInstanceDetails, GroupId, Topic}
+import models._
 import kafka.security.auth.SimpleAclAuthorizer
 import org.apache.kafka.streams.KafkaStreams.State
-import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.QueryableStoreTypes
-import org.apache.kafka.streams.KeyValue
 import play.api.mvc._
 import util.{Content, KafkaUtils, StreamConfig, ZookeeperConfig}
 import play.api.Configuration
-import services.stream.GroupMetadataTopic.KafkaTask
+import services.stream.GroupMetadataTopic.GroupMetadataStreamTask
 import util.KafkaUtils.UserName
+
 import scala.collection.JavaConverters._
 
 
 @Singleton
-class ClientController @Inject()(playConfig: Configuration, cc: ControllerComponents, kafka: KafkaTask) extends AbstractController(cc) {
+class ClientController @Inject()(playConfig: Configuration, cc: ControllerComponents, kafka: GroupMetadataStreamTask) extends AbstractController(cc) {
 
 
   private val STORENAME =
@@ -26,8 +25,8 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
 
   private def getAcls(
                        authorizer: SimpleAclAuthorizer,
-                       details:  Map[GroupId, Map[Topic, Set[ConsumerInstanceDetails]]]
-                     ): Map[(GroupId, Topic), Set[UserName]] = {
+                       details:  Map[GroupId, Map[TopicName, Set[ConsumerInstanceDetails]]]
+                     ): Map[(GroupId, TopicName), Set[UserName]] = {
     details.flatMap {
       case (groupId, topicdetails) => {
         topicdetails.keys.map( t=>
@@ -49,10 +48,13 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
 
 
         val clientId = URLDecoder.decode(enCodedClientId, "UTF-8")
-        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
-        val details = Content.groupWindowedActiveGroupByGroupId(iterator, clientId)
+        val details = Content.groupWindowedActiveGroupByGroupId(
+          offsetsMetaWindowStore.all().asScala.toList,
+          clientId
+        )
+
         val authorizer = KafkaUtils.authorizer(ZookeeperConfig(playConfig))
-        val aclsDetails: Map[(GroupId, Topic), Set[UserName]] = getAcls(authorizer, details)
+        val aclsDetails: Map[(GroupId, TopicName), Set[UserName]] = getAcls(authorizer, details)
         val adminAcls: Set[UserName] = KafkaUtils.currentACLS(authorizer, "*", "*")
 
         Ok(views.html.client(details, clientId, aclsDetails, adminAcls))

@@ -3,7 +3,8 @@ package services.stream.GroupMetadataTopic
 import java.nio.ByteBuffer
 import java.time.Instant
 
-import kafka.coordinator.group.{ClientDetails, ConsumerOffsetDetails, _}
+import kafka.coordinator.group.{GroupMetadataKey, GroupMetadataManager, OffsetKey}
+import models.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
 import org.apache.kafka.streams.kstream.Reducer
 import play.api.Logger
 

@@ -1,4 +1,4 @@
-package kafka.coordinator.group
+package models
 
 import play.api.libs.json.{Json, OFormat}
 

@@ -1,7 +1,7 @@
-package kafka.coordinator.serializer
+package models.serializer
 
 import com.lightbend.kafka.scala.streams.StatelessScalaSerde
-import kafka.coordinator.group.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
+import models.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
 import org.apache.kafka.common.serialization.{Serde, Serdes}
 import play.api.libs.json.Json
 
