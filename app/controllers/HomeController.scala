@@ -3,7 +3,7 @@ package controllers
 import java.time.Instant
 
 import javax.inject._
-import models.ActiveGroup
+import models.{ActiveGroup, GroupId}
 import org.apache.kafka.streams.KafkaStreams.State
 import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.QueryableStoreTypes
@@ -12,6 +12,7 @@ import play.api.Configuration
 import play.api.mvc._
 import util._
 import services.stream.GroupMetadataTopic.GroupMetadataStreamTask
+
 import scala.collection.JavaConverters._
 
 @Singleton
@@ -24,7 +25,7 @@ class HomeController @Inject()(playConfig: Configuration,
 
   private def getWindowsBetween(streams: KafkaStreams, from: Long, to: Long) = {
     val offsetsMetaWindowStore = streams.store(STORENAME,
-      QueryableStoreTypes.windowStore[String, ActiveGroup]())
+      QueryableStoreTypes.windowStore[GroupId, ActiveGroup]())
     offsetsMetaWindowStore.fetchAll(from, to)
   }
 
@@ -35,10 +36,10 @@ class HomeController @Inject()(playConfig: Configuration,
         val offsetsMetaWindowStore =
           kafka.stream.store(
             STORENAME,
-            QueryableStoreTypes.windowStore[String, ActiveGroup]()
+            QueryableStoreTypes.windowStore[GroupId, ActiveGroup]()
           )
 
-        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
+        val iterator: Seq[KeyValue[Windowed[GroupId], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
         Ok(views.html.index(Content.groupWindowedActiveGroupByClientDetails(KafkaUtils.getLatestStores(iterator))))
 
       case State.ERROR => InternalServerError("ERROR")
@@ -55,7 +56,7 @@ class HomeController @Inject()(playConfig: Configuration,
         val fiveMinsAgo = now.minusSeconds(300L)
 
         kafka.stream.allMetadataForStore(STORENAME)
-        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] =
+        val iterator: Seq[KeyValue[Windowed[GroupId], ActiveGroup]] =
           getWindowsBetween(kafka.stream, fiveMinsAgo.toEpochMilli, now.toEpochMilli).asScala.toList
         Ok(views.html.between(Content.groupWindowedActiveGroupByClientDetails(iterator), fiveMinsAgo.toEpochMilli, now.toEpochMilli))
 
@@ -69,7 +70,7 @@ class HomeController @Inject()(playConfig: Configuration,
     kafka.stream.state() match {
       case State.RUNNING =>
         kafka.stream.allMetadataForStore(STORENAME)
-        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] =
+        val iterator: Seq[KeyValue[Windowed[GroupId], ActiveGroup]] =
           getWindowsBetween(kafka.stream, from, to).asScala.toList
         Ok(views.html.between(Content.groupWindowedActiveGroupByClientDetails(iterator), from, to))
       case State.ERROR => InternalServerError("ERROR")

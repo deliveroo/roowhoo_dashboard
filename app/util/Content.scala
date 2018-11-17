@@ -6,8 +6,8 @@ import org.apache.kafka.streams.kstream.Windowed
 
 object Content {
 
-  def groupWindowedActiveGroupByClientDetails(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]
-                       ): Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])] = {
+  def groupWindowedActiveGroupByClientDetails(iterator: Seq[KeyValue[Windowed[GroupId], ActiveGroup]]
+                       ): Seq[(Windowed[GroupId], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])] = {
     iterator.map(itr => {
       val consumerPerTopic= KafkaUtils.groupPerTopic(itr.value.clientDetails)
       val window = itr.key
@@ -21,8 +21,8 @@ object Content {
   }
 
   def groupWindowedActiveGroupByGroupId(
-                                         iterator: Seq[KeyValue[Windowed[String], ActiveGroup]],
-                                         clientId: String
+                                         iterator: Seq[KeyValue[Windowed[GroupId], ActiveGroup]],
+                                         clientId: ClientId
                                        ): Map[GroupId, Map[TopicName, Set[ConsumerInstanceDetails]]] = {
     KafkaUtils.getLatestStores(iterator)
       .filter(_.value.clientDetails.clientId == clientId)

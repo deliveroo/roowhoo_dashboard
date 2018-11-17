@@ -20,7 +20,7 @@ object ClientDetails {
   implicit val consumerInstanceDetailsJson: OFormat[ConsumerInstanceDetails] = Json.format[ConsumerInstanceDetails]
   implicit val clientDetailsJson: OFormat[ClientDetails] = Json.format[ClientDetails]
 
-  def apply(consumerGroup: String, value: Array[Byte]): ClientDetails = {
+  def apply(consumerGroup: GroupId, value: Array[Byte]): ClientDetails = {
 
     val current = GroupMetadataManager.readGroupMessageValue(consumerGroup,ByteBuffer.wrap(value))
     val grouped = current.allMemberMetadata.groupBy(m => m.clientId)

@@ -43,7 +43,7 @@ class ClientController @Inject()(playConfig: Configuration, cc: ControllerCompon
         val offsetsMetaWindowStore =
           kafka.stream.store(
             STORENAME,
-            QueryableStoreTypes.windowStore[String, ActiveGroup]()
+            QueryableStoreTypes.windowStore[GroupId, ActiveGroup]()
           )
 
 

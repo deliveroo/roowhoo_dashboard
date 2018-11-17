@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.time.Instant
 
 import kafka.coordinator.group.{GroupMetadataKey, GroupMetadataManager, OffsetKey}
-import models.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
+import models.{ActiveGroup, ClientDetails, ConsumerOffsetDetails, GroupId}
 import org.apache.kafka.streams.kstream.Reducer
 import play.api.Logger
 
@@ -22,7 +22,7 @@ object GroupMetadataHelper  {
   def isTombstone(k: Array[Byte], v: Array[Byte]): Boolean  =
     v == null
 
-  def isCommittedLastTenMins (k:String ,v: ConsumerOffsetDetails): Boolean =  {
+  def isCommittedLastTenMins (k:GroupId ,v: ConsumerOffsetDetails): Boolean =  {
     Logger.info(s"####v: ${v}")
     val commitTs = Instant.ofEpochMilli(v.commitTimestamp)
     val now = Instant.now()
@@ -31,20 +31,20 @@ object GroupMetadataHelper  {
     if(commitTs.compareTo(tenMinutesAgo) < 1) false else true
   }
 
-  def offsetConsumerGroupKey(k: Array[Byte], v: Array[Byte]): (String,ConsumerOffsetDetails) =  {
+  def offsetConsumerGroupKey(k: Array[Byte], v: Array[Byte]): (GroupId, ConsumerOffsetDetails) =  {
     val offsetKey = GroupMetadataManager.readMessageKey(ByteBuffer.wrap(k)).asInstanceOf[OffsetKey]
     val value = GroupMetadataManager.readOffsetMessageValue(ByteBuffer.wrap(v))
     (offsetKey.key.group, ConsumerOffsetDetails(offsetKey, value))
   }
 
-  def groupMetadataConsumerGroupKey(k: Array[Byte], v: Array[Byte]): (String, ClientDetails)  = {
+  def groupMetadataConsumerGroupKey(k: Array[Byte], v: Array[Byte]): (GroupId, ClientDetails)  = {
     val consumerGroup = GroupMetadataManager.readMessageKey(ByteBuffer.wrap(k)).asInstanceOf[GroupMetadataKey].toString
     val clientsDetail = ClientDetails(consumerGroup, v)
     (consumerGroup, clientsDetail)
   }
 
   val newGroupMetadataAggregateInit = () => ClientDetails.empty
-  val newLatestGroupMeta = (consumerGroupName:String, v: ClientDetails, agg: ClientDetails) => {
+  val newLatestGroupMeta = (consumerGroupName:GroupId, v: ClientDetails, agg: ClientDetails) => {
     if (ClientDetails.isEmpty(agg)) {
       if (v.generationId > agg.generationId) v else agg
     } else v

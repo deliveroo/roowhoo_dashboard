@@ -12,12 +12,12 @@ import org.apache.kafka.streams.state.WindowStore
 import play.api.Logger
 import util.StreamConfig
 import GroupMetadataHelper._
-import models.{ActiveGroup, ClientDetails, ConsumerOffsetDetails}
+import models._
 import org.apache.kafka.common.internals.Topic
 
 
 object StreamGroupMetadata  {
-  val GROUP_METADATA_TOPIC_NAME: String = Topic.GROUP_METADATA_TOPIC_NAME //__consumer_offsets
+  val GROUP_METADATA_TOPIC_NAME: TopicName = Topic.GROUP_METADATA_TOPIC_NAME //__consumer_offsets
 
   def stream(config: StreamConfig):KafkaStreams = {
     val builder = new StreamsBuilderS()
@@ -27,19 +27,19 @@ object StreamGroupMetadata  {
       .filterNot(isTombstone)
       .branch(isOffset,isGroupMetadata)
 
-    val offsetCommitsLastTenMins: KStreamS[String, ConsumerOffsetDetails] = offsetKeyStream
-      .map[String,ConsumerOffsetDetails](offsetConsumerGroupKey)
+    val offsetCommitsLastTenMins: KStreamS[GroupId, ConsumerOffsetDetails] = offsetKeyStream
+      .map[GroupId,ConsumerOffsetDetails](offsetConsumerGroupKey)
       .filter(isCommittedLastTenMins)
 
 
-    val groupMetadataCommits: KTableS[String, ClientDetails] = groupMetadataKeyStream
-      .map[String, ClientDetails](groupMetadataConsumerGroupKey)
+    val groupMetadataCommits: KTableS[GroupId, ClientDetails] = groupMetadataKeyStream
+      .map[GroupId, ClientDetails](groupMetadataConsumerGroupKey)
       .filterNot((_, c) => ClientDetails.isEmpty(c))
       .groupByKey(Serialized.`with`(Serdes.String(), CustomSerdes.clientDetailsSerde))
       .aggregate(newGroupMetadataAggregateInit, newLatestGroupMeta)
 
     implicit val joinedImp = joinedFromKVOSerde(Serdes.String(), CustomSerdes.consumerOffsetDetailsSerde,  CustomSerdes.clientDetailsSerde)
-    val joined: KStreamS[String, ActiveGroup] = offsetCommitsLastTenMins
+    val joined: KStreamS[GroupId, ActiveGroup] = offsetCommitsLastTenMins
       .join(
         groupMetadataCommits,
         (offsetCommit:ConsumerOffsetDetails, groupMetadata:ClientDetails) => {
@@ -53,7 +53,7 @@ object StreamGroupMetadata  {
         (a1: ActiveGroup, a2: ActiveGroup) => {
           a2},
         Materialized
-          .as[String, ActiveGroup, WindowStore[Bytes, Array[Byte]]](StreamConfig.OFFSETS_AND_META_WINDOW_STORE_NAME(config))
+          .as[GroupId, ActiveGroup, WindowStore[Bytes, Array[Byte]]](StreamConfig.OFFSETS_AND_META_WINDOW_STORE_NAME(config))
           .withKeySerde(Serdes.String())
           .withValueSerde(CustomSerdes.activeGroup)
       )

@@ -24,27 +24,27 @@ object Frontend {
     }
   }
 
-  def activeTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
+  def activeTopics(activeGroups: Seq[(Windowed[GroupId], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
     topicsFromActiveGroups(activeGroups)
       .filterNot(topic=>internalTopic(topic) || streamTopic(topic))
 
 
-  private def topicsFromActiveGroups(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] = {
+  private def topicsFromActiveGroups(activeGroups: Seq[(Windowed[GroupId], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] = {
     activeGroups
       .flatMap(_._3.keys).toSet
   }
 
-  def internalStreamTopics(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
+  def internalStreamTopics(activeGroups: Seq[(Windowed[GroupId], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Set[TopicName] =
     topicsFromActiveGroups(activeGroups).filter(streamTopic)
 
-  def clientsWithRiskClientIds(activeGroups: Seq[(Windowed[String], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Seq[ClientDetails] =
+  def clientsWithRiskClientIds(activeGroups: Seq[(Windowed[GroupId], ClientDetails, Map[TopicName, Set[ConsumerInstanceDetails]])]): Seq[ClientDetails] =
     activeGroups.filter(ag =>
       isRisky(ag._2.clientId)
     ).map(_._2)
 
 
-  def internalTopic(name: String): Boolean = name.startsWith("_") && !streamTopic(name)
+  def internalTopic(name: TopicName): Boolean = name.startsWith("_") && !streamTopic(name)
 
-  def streamTopic(name: String): Boolean =
+  def streamTopic(name: TopicName): Boolean =
     internalStreamTopicKeyWords.exists(name.startsWith)
 }

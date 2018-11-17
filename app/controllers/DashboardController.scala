@@ -3,7 +3,7 @@ package controllers
 import java.time.{ZoneId, ZonedDateTime}
 
 import javax.inject._
-import models.ActiveGroup
+import models.{ActiveGroup, GroupId}
 import org.apache.kafka.streams.KafkaStreams.State
 import org.apache.kafka.streams.kstream.Windowed
 import org.apache.kafka.streams.state.QueryableStoreTypes
@@ -30,10 +30,10 @@ class DashboardController @Inject()(playConfig: Configuration,
         val offsetsMetaWindowStore =
           kafka.stream.store(
             STORENAME,
-            QueryableStoreTypes.windowStore[String, ActiveGroup]()
+            QueryableStoreTypes.windowStore[GroupId, ActiveGroup]()
           )
 
-        val iterator: Seq[KeyValue[Windowed[String], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
+        val iterator: Seq[KeyValue[Windowed[GroupId], ActiveGroup]] = offsetsMetaWindowStore.all().asScala.toList
 
         val todayActiveGroups = KafkaUtils.getLatestStores(iterator).filter(v => {
           val utcZone = ZoneId.of("UTC")

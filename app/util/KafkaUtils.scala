@@ -16,7 +16,7 @@ object KafkaUtils {
     s"${zkHost}:${zookeeperConfig.port}"
   }
 
-  def getLatestStores(iterator: Seq[KeyValue[Windowed[String], ActiveGroup]]):
+  def getLatestStores(iterator: Seq[KeyValue[Windowed[GroupId], ActiveGroup]]):
   Seq[KeyValue[Windowed[String], ActiveGroup]] = {
     iterator
       .groupBy {
