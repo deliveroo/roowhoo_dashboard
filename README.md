@@ -4,6 +4,8 @@ provides a rolling 5 minute view of active consumers on a particular kafka clust
 
 # How to run it locally
 
+Run an instance of kafka locally, or port-forward to an instance running in kubernetes.
+
 ```bash
 ./run-locally.sh --kafka_username=<USERNAME> \
                  --kafka_password=<PASSWORD> \
@@ -12,3 +14,5 @@ provides a rolling 5 minute view of active consumers on a particular kafka clust
                  --zookeeper_host=localhost \
                  --zookeeper_port=2181
 ```
+
+View at http://localhost:9000
